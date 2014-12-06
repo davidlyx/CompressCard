@@ -1,0 +1,38 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+DeviceInterface	drv.cpp	/^	UNICODE_STRING DeviceInterface;$/;"	m	struct:_deviceExtension	file:
+DeviceObject	drv.cpp	/^	PDEVICE_OBJECT DeviceObject;$/;"	m	struct:_deviceExtension	file:
+DriverEntry	drv.cpp	/^NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING  RegistryPath)$/;"	f
+GUID_drvInterface	drv.cpp	/^static const GUID GUID_drvInterface = {0xAC1F07, 0x61bb, 0x4a65, {0x9c, 0x83, 0x68, 0x98, 0xb3, 0x80, 0x2d, 0xd0 } };$/;"	v	file:
+HANDLE	VisualDDKHelpers.h	/^#define HANDLE /;"	d
+HANDLE_VisualDDK_Helper_t	VisualDDKHelpers.h	/^typedef struct HANDLE_VisualDDK_Helper *HANDLE_VisualDDK_Helper_t, **PHANDLE_VisualDDK_Helper_t;$/;"	t	typeref:struct:HANDLE_VisualDDK_Helper
+Irp	drv.cpp	/^	PIRP Irp;$/;"	m	struct:_deviceExtension	file:
+NTSTATUS	VisualDDKHelpers.h	/^#define NTSTATUS /;"	d
+NTSTATUS_VisualDDK_Helper	VisualDDKHelpers.h	/^typedef enum NTSTATUS_VisualDDK_Helper {} NTSTATUS_VisualDDK_Helper_t;$/;"	g
+NTSTATUS_VisualDDK_Helper_t	VisualDDKHelpers.h	/^typedef enum NTSTATUS_VisualDDK_Helper {} NTSTATUS_VisualDDK_Helper_t;$/;"	t	typeref:enum:NTSTATUS_VisualDDK_Helper
+PHANDLE	VisualDDKHelpers.h	/^#define PHANDLE /;"	d
+PHANDLE_VisualDDK_Helper_t	VisualDDKHelpers.h	/^typedef struct HANDLE_VisualDDK_Helper *HANDLE_VisualDDK_Helper_t, **PHANDLE_VisualDDK_Helper_t;$/;"	t	typeref:struct:
+Pdrv_DEVICE_EXTENSION	drv.cpp	/^} drv_DEVICE_EXTENSION, *Pdrv_DEVICE_EXTENSION;$/;"	t	typeref:struct:_deviceExtension	file:
+PhysicalDeviceObject	drv.cpp	/^	PDEVICE_OBJECT PhysicalDeviceObject;$/;"	m	struct:_deviceExtension	file:
+ReadEvent	drv.cpp	/^	KEVENT ReadEvent;$/;"	m	struct:_deviceExtension	file:
+SpinIrp	drv.cpp	/^	KSPIN_LOCK SpinIrp;$/;"	m	struct:_deviceExtension	file:
+TargetDeviceObject	drv.cpp	/^	PDEVICE_OBJECT TargetDeviceObject;$/;"	m	struct:_deviceExtension	file:
+_WIN32_WINNT	stdafx.h	/^#define _WIN32_WINNT /;"	d
+_deviceExtension	drv.cpp	/^typedef struct _deviceExtension$/;"	s	file:
+drvAddDevice	drv.cpp	/^NTSTATUS drvAddDevice(IN PDRIVER_OBJECT  DriverObject, IN PDEVICE_OBJECT  PhysicalDeviceObject)$/;"	f
+drvCreateClose	drv.cpp	/^NTSTATUS drvCreateClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)$/;"	f
+drvDefaultHandler	drv.cpp	/^NTSTATUS drvDefaultHandler(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)$/;"	f
+drvForwardIrpSynchronous	drv.cpp	/^NTSTATUS drvForwardIrpSynchronous($/;"	f
+drvIrpCompletion	drv.cpp	/^NTSTATUS drvIrpCompletion($/;"	f
+drvPnP	drv.cpp	/^NTSTATUS drvPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)$/;"	f
+drvRead	drv.cpp	/^NTSTATUS drvRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)$/;"	f
+drvReadPciConfig	drv.cpp	/^NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATION pIrpStack)$/;"	f
+drvUnload	drv.cpp	/^void drvUnload(IN PDRIVER_OBJECT DriverObject)$/;"	f
+drv_DEVICE_EXTENSION	drv.cpp	/^} drv_DEVICE_EXTENSION, *Pdrv_DEVICE_EXTENSION;$/;"	t	typeref:struct:_deviceExtension	file:
+sizeof	VisualDDKHelpers.h	/^C_ASSERT(sizeof(HANDLE_VisualDDK_Helper_t) == sizeof(HANDLE));$/;"	v
+sizeof	VisualDDKHelpers.h	/^C_ASSERT(sizeof(NTSTATUS_VisualDDK_Helper_t) == sizeof(NTSTATUS));$/;"	v
+sizeof	VisualDDKHelpers.h	/^C_ASSERT(sizeof(PHANDLE_VisualDDK_Helper_t) == sizeof(PHANDLE));$/;"	v

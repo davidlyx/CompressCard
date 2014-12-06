@@ -1,0 +1,1829 @@
+cscope 15 $HOME/ç™¾åº¦äº‘åŒæ­¥ç›˜/åŽ‹ç¼©å¡/åŽ‹ç¼©å¡/src/compress_card/drv -q 0000000211 0000010588
+	@VisualDDKHelpers.h
+
+1 #´agm¨
+Úû
+
+
+12 #ifdeà
+_DEBUG
+
+
+14 
+	~<exýt.h
+>
+
+15 
+	~<Ádef.h
+>
+
+17 
+	eNTSTATUS_Visu®DDK_H–³r
+ {} 
+	gNTSTATUS_Visu®DDK_H–³r_t
+;
+
+18 
+C_ASSERT
+((
+NTSTATUS_Visu®DDK_H–³r_t
+è=ð(
+NTSTATUS
+));
+
+20 
+	#NTSTATUS
+ 
+NTSTATUS_Visu®DDK_H–³r_t
+
+
+	)
+
+22 
+HANDLE_Visu®DDK_H–³r
+ *
+	tHANDLE_Visu®DDK_H–³r_t
+, **
+	tPHANDLE_Visu®DDK_H–³r_t
+;
+
+23 
+C_ASSERT
+((
+HANDLE_Visu®DDK_H–³r_t
+è=ð(
+HANDLE
+));
+
+24 
+C_ASSERT
+((
+PHANDLE_Visu®DDK_H–³r_t
+è=ð(
+PHANDLE
+));
+
+26 
+	#HANDLE
+ 
+HANDLE_Visu®DDK_H–³r_t
+
+
+	)
+
+27 
+	#PHANDLE
+ 
+PHANDLE_Visu®DDK_H–³r_t
+
+
+	)
+
+	@drv.cpp
+
+1 
+	~"¡dafx.h
+"
+
+22 
+drvUÆßd
+(
+IN
+ 
+PDRIVER_OBJECT
+ 
+Driv”Objeù
+);
+
+23 
+NTSTATUS
+ 
+drvC»©eClo£
+(
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+, IN 
+PIRP
+ 
+I½
+);
+
+24 
+NTSTATUS
+ 
+drvDeçuÉHªdËr
+(
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+, IN 
+PIRP
+ 
+I½
+);
+
+25 
+NTSTATUS
+ 
+drvAddDeviû
+(
+IN
+ 
+PDRIVER_OBJECT
+ 
+Driv”Objeù
+, IN 
+PDEVICE_OBJECT
+ 
+PhysiÿlDeviûObjeù
+);
+
+26 
+NTSTATUS
+ 
+drvPnP
+(
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+, IN 
+PIRP
+ 
+I½
+);
+
+27 
+NTSTATUS
+ 
+drvR—d
+(
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+, IN 
+PIRP
+ 
+I½
+);
+
+29 
+	s_deviûEx‹nsiÚ
+
+
+31 
+PDEVICE_OBJECT
+ 
+	mDeviûObjeù
+;
+
+32 
+PDEVICE_OBJECT
+ 
+	mT¬g‘DeviûObjeù
+;
+
+33 
+PDEVICE_OBJECT
+ 
+	mPhysiÿlDeviûObjeù
+;
+
+34 
+UNICODE_STRING
+ 
+	mDeviûIÁ”çû
+;
+
+36 
+PIRP
+ 
+	mI½
+;
+
+37 
+KSPIN_LOCK
+ 
+	mSpšI½
+;
+
+38 
+KEVENT
+ 
+	mR—dEv’t
+;
+
+39 } 
+	tdrv_DEVICE_EXTENSION
+, *
+	tPdrv_DEVICE_EXTENSION
+;
+
+42 cÚ¡ 
+GUID
+ 
+	gGUID_drvIÁ”çû
+ = {0xAC1F07, 0x61bb, 0x4a65, {0x9c, 0x83, 0x68, 0x98, 0xb3, 0x80, 0x2d, 0xd0 } };
+
+44 #ifdeà
+__ýlu¥lus
+
+
+45 "C" 
+NTSTATUS
+ 
+Driv”EÁry
+(
+IN
+ 
+PDRIVER_OBJECT
+ 
+Driv”Objeù
+, IN 
+PUNICODE_STRING
+ 
+Regi¡ryP©h
+);
+
+48 
+NTSTATUS
+ 
+	$Driv”EÁry
+(
+IN
+ 
+PDRIVER_OBJECT
+ 
+Driv”Objeù
+, IN 
+PUNICODE_STRING
+ 
+Regi¡ryP©h
+)
+
+50 
+i
+;
+
+52 
+i
+ = 0; i <ð
+IRP_MJ_MAXIMUM_FUNCTION
+; i++)
+
+53 
+Driv”Objeù
+->
+MajÜFunùiÚ
+[
+i
+] = 
+drvDeçuÉHªdËr
+;
+
+55 
+Driv”Objeù
+->
+MajÜFunùiÚ
+[
+IRP_MJ_CREATE
+] = 
+drvC»©eClo£
+;
+
+56 
+Driv”Objeù
+->
+MajÜFunùiÚ
+[
+IRP_MJ_CLOSE
+] = 
+drvC»©eClo£
+;
+
+57 
+Driv”Objeù
+->
+MajÜFunùiÚ
+[
+IRP_MJ_PNP
+] = 
+drvPnP
+;
+
+60 
+Driv”Objeù
+->
+Driv”UÆßd
+ = 
+drvUÆßd
+;
+
+61 
+Driv”Objeù
+->
+Driv”S¹Io
+ = 
+NULL
+;
+
+62 
+Driv”Objeù
+->
+Driv”Ex‹nsiÚ
+->
+AddDeviû
+ = 
+drvAddDeviû
+;
+
+64  
+STATUS_SUCCESS
+;
+
+65 
+	}
+}
+
+67 
+	$drvUÆßd
+(
+IN
+ 
+PDRIVER_OBJECT
+ 
+Driv”Objeù
+)
+
+69 
+	}
+}
+
+71 
+NTSTATUS
+ 
+	$drvC»©eClo£
+(
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+, IN 
+PIRP
+ 
+I½
+)
+
+73 
+I½
+->
+IoStus
+.
+Stus
+ = 
+STATUS_SUCCESS
+;
+
+74 
+I½
+->
+IoStus
+.
+InfÜm©iÚ
+ = 0;
+
+75 
+	`IoCom¶‘eReque¡
+(
+I½
+, 
+IO_NO_INCREMENT
+);
+
+76  
+STATUS_SUCCESS
+;
+
+77 
+	}
+}
+
+79 
+NTSTATUS
+ 
+	$drvDeçuÉHªdËr
+(
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+, IN 
+PIRP
+ 
+I½
+)
+
+81 
+Pdrv_DEVICE_EXTENSION
+ 
+deviûEx‹nsiÚ
+ = 
+NULL
+;
+
+83 
+	`IoSkCu¼’tI½SckLoÿtiÚ
+(
+I½
+);
+
+84 
+deviûEx‹nsiÚ
+ = (
+Pdrv_DEVICE_EXTENSION
+è
+DeviûObjeù
+->
+DeviûEx‹nsiÚ
+;
+
+85  
+	`IoC®lDriv”
+(
+deviûEx‹nsiÚ
+->
+T¬g‘DeviûObjeù
+, 
+I½
+);
+
+86 
+	}
+}
+
+88 
+NTSTATUS
+ 
+	$drvAddDeviû
+(
+IN
+ 
+PDRIVER_OBJECT
+ 
+Driv”Objeù
+, IN 
+PDEVICE_OBJECT
+ 
+PhysiÿlDeviûObjeù
+)
+
+90 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+ = 
+NULL
+;
+
+91 
+Pdrv_DEVICE_EXTENSION
+ 
+pEx‹nsiÚ
+ = 
+NULL
+;
+
+92 
+NTSTATUS
+ 
+¡©us
+;
+
+94 
+¡©us
+ = 
+	`IoC»©eDeviû
+(
+Driv”Objeù
+,
+
+95 (
+drv_DEVICE_EXTENSION
+),
+
+96 
+NULL
+,
+
+97 
+FILE_DEVICE_UNKNOWN
+,
+
+98 
+FILE_DEVICE_SECURE_OPEN
+,
+
+99 
+TRUE
+,
+
+100 &
+DeviûObjeù
+);
+
+102 ià(!
+	`NT_SUCCESS
+(
+¡©us
+))
+
+103  
+¡©us
+;
+
+105 
+pEx‹nsiÚ
+ = (
+Pdrv_DEVICE_EXTENSION
+)
+DeviûObjeù
+->
+DeviûEx‹nsiÚ
+;
+
+107 
+pEx‹nsiÚ
+->
+DeviûObjeù
+ = DeviceObject;
+
+108 
+pEx‹nsiÚ
+->
+PhysiÿlDeviûObjeù
+ = PhysicalDeviceObject;
+
+109 
+pEx‹nsiÚ
+->
+T¬g‘DeviûObjeù
+ = 
+	`IoA‰achDeviûToDeviûSck
+(
+DeviûObjeù
+, 
+PhysiÿlDeviûObjeù
+);
+
+111 
+pEx‹nsiÚ
+->
+I½
+ = 
+NULL
+;
+
+112 
+	`KeIn™ŸlizeSpšLock
+(&
+pEx‹nsiÚ
+->
+SpšI½
+);
+
+113 
+	`KeIn™ŸlizeEv’t
+(&
+pEx‹nsiÚ
+->
+R—dEv’t
+, 
+SynchrÚiz©iÚEv’t
+, 
+FALSE
+);
+
+115 
+¡©us
+ = 
+	`IoRegi¡”DeviûIÁ”çû
+(
+PhysiÿlDeviûObjeù
+, &
+GUID_drvIÁ”çû
+, 
+NULL
+, &
+pEx‹nsiÚ
+->
+DeviûIÁ”çû
+);
+
+116 
+	`ASSERT
+(
+	`NT_SUCCESS
+(
+¡©us
+));
+
+118 
+DeviûObjeù
+->
+FÏgs
+ &ð~
+DO_DEVICE_INITIALIZING
+;
+
+119 
+DeviûObjeù
+->
+FÏgs
+ |ð
+DO_DIRECT_IO
+;
+
+121  
+STATUS_SUCCESS
+;
+
+122 
+	}
+}
+
+125 
+NTSTATUS
+ 
+	$drvI½Com¶‘iÚ
+(
+
+126 
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+,
+
+127 
+IN
+ 
+PIRP
+ 
+I½
+,
+
+128 
+IN
+ 
+PVOID
+ 
+CÚ‹xt
+
+
+131 
+PKEVENT
+ 
+Ev’t
+ = (PKEVENTè
+CÚ‹xt
+;
+
+133 
+	`UNREFERENCED_PARAMETER
+(
+DeviûObjeù
+);
+
+134 
+	`UNREFERENCED_PARAMETER
+(
+I½
+);
+
+136 
+	`KeS‘Ev’t
+(
+Ev’t
+, 
+IO_NO_INCREMENT
+, 
+FALSE
+);
+
+138 (
+STATUS_MORE_PROCESSING_REQUIRED
+);
+
+139 
+	}
+}
+
+141 
+NTSTATUS
+ 
+	$drvFÜw¬dI½SynchrÚous
+(
+
+142 
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+,
+
+143 
+IN
+ 
+PIRP
+ 
+I½
+
+
+146 
+Pdrv_DEVICE_EXTENSION
+ 
+deviûEx‹nsiÚ
+;
+
+147 
+KEVENT
+ 
+ev’t
+;
+
+148 
+NTSTATUS
+ 
+¡©us
+;
+
+150 
+	`KeIn™ŸlizeEv’t
+(&
+ev’t
+, 
+NÙifiÿtiÚEv’t
+, 
+FALSE
+);
+
+151 
+deviûEx‹nsiÚ
+ = (
+Pdrv_DEVICE_EXTENSION
+è
+DeviûObjeù
+->
+DeviûEx‹nsiÚ
+;
+
+153 
+	`IoCÝyCu¼’tI½SckLoÿtiÚToNext
+(
+I½
+);
+
+155 
+	`IoS‘Com¶‘iÚRoutše
+(
+I½
+, 
+drvI½Com¶‘iÚ
+, &
+ev’t
+, 
+TRUE
+, TRUE, TRUE);
+
+157 
+¡©us
+ = 
+	`IoC®lDriv”
+(
+deviûEx‹nsiÚ
+->
+T¬g‘DeviûObjeù
+, 
+I½
+);
+
+159 ià(
+¡©us
+ =ð
+STATUS_PENDING
+) {
+
+160 
+	`KeWa™FÜSšgËObjeù
+(&
+ev’t
+, 
+Executive
+, 
+K”ÃlMode
+, 
+FALSE
+, 
+NULL
+);
+
+161 
+¡©us
+ = 
+I½
+->
+IoStus
+.
+Stus
+;
+
+163  
+¡©us
+;
+
+164 
+	}
+}
+
+166 
+NTSTATUS
+ 
+	$drvPnP
+(
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+, IN 
+PIRP
+ 
+I½
+)
+
+168 
+PIO_STACK_LOCATION
+ 
+œpSp
+ = 
+	`IoG‘Cu¼’tI½SckLoÿtiÚ
+(
+I½
+);
+
+169 
+Pdrv_DEVICE_EXTENSION
+ 
+pExt
+ = ((Pdrv_DEVICE_EXTENSION)
+DeviûObjeù
+->
+DeviûEx‹nsiÚ
+);
+
+170 
+NTSTATUS
+ 
+¡©us
+;
+
+172 
+	`ASSERT
+(
+pExt
+);
+
+174 
+œpSp
+->
+MšÜFunùiÚ
+)
+
+176 
+IRP_MN_START_DEVICE
+:
+
+177 
+¡©us
+ = 
+	`drvFÜw¬dI½SynchrÚous
+(
+DeviûObjeù
+, 
+I½
+);
+
+178 if(
+	`NT_SUCCESS
+(
+¡©us
+))
+
+180 
+¡©us
+ = 
+	`drvR—dPciCÚfig
+(
+pExt
+, 
+œpSp
+);
+
+181 if(
+	`NT_SUCCESS
+(
+¡©us
+))
+
+183 
+	`IoS‘DeviûIÁ”çûS‹
+(&
+pExt
+->
+DeviûIÁ”çû
+, 
+TRUE
+);
+
+187 
+I½
+->
+IoStus
+.
+Stus
+ = 
+STATUS_SUCCESS
+;
+
+188 
+	`IoCom¶‘eReque¡
+(
+I½
+, 
+IO_NO_INCREMENT
+);
+
+189  
+STATUS_SUCCESS
+;
+
+191 
+IRP_MN_QUERY_REMOVE_DEVICE
+:
+
+192 
+I½
+->
+IoStus
+.
+Stus
+ = 
+STATUS_SUCCESS
+;
+
+193 
+	`IoCom¶‘eReque¡
+(
+I½
+, 
+IO_NO_INCREMENT
+);
+
+194  
+STATUS_SUCCESS
+;
+
+196 
+IRP_MN_REMOVE_DEVICE
+:
+
+197 
+	`IoS‘DeviûIÁ”çûS‹
+(&
+pExt
+->
+DeviûIÁ”çû
+, 
+FALSE
+);
+
+198 
+¡©us
+ = 
+	`drvFÜw¬dI½SynchrÚous
+(
+DeviûObjeù
+, 
+I½
+);
+
+199 
+	`IoD‘achDeviû
+(
+pExt
+->
+T¬g‘DeviûObjeù
+);
+
+200 
+	`IoD–‘eDeviû
+(
+pExt
+->
+DeviûObjeù
+);
+
+201 
+	`RŽF»eUnicodeSŒšg
+(&
+pExt
+->
+DeviûIÁ”çû
+);
+
+202 
+I½
+->
+IoStus
+.
+Stus
+ = 
+STATUS_SUCCESS
+;
+
+203 
+	`IoCom¶‘eReque¡
+(
+I½
+, 
+IO_NO_INCREMENT
+);
+
+204  
+STATUS_SUCCESS
+;
+
+206 
+IRP_MN_QUERY_PNP_DEVICE_STATE
+:
+
+207 
+¡©us
+ = 
+	`drvFÜw¬dI½SynchrÚous
+(
+DeviûObjeù
+, 
+I½
+);
+
+208 
+I½
+->
+IoStus
+.
+InfÜm©iÚ
+ = 0;
+
+209 
+	`IoCom¶‘eReque¡
+(
+I½
+, 
+IO_NO_INCREMENT
+);
+
+210  
+¡©us
+;
+
+212  
+	`drvDeçuÉHªdËr
+(
+DeviûObjeù
+, 
+I½
+);
+
+213 
+	}
+}
+
+215 
+NTSTATUS
+ 
+	$drvR—d
+(
+IN
+ 
+PDEVICE_OBJECT
+ 
+DeviûObjeù
+, IN 
+PIRP
+ 
+I½
+)
+
+217 
+I½
+->
+IoStus
+.
+Stus
+ = 
+STATUS_SUCCESS
+;
+
+218 
+I½
+->
+IoStus
+.
+InfÜm©iÚ
+ = 0;
+
+219 
+	`IoCom¶‘eReque¡
+(
+I½
+, 
+IO_NO_INCREMENT
+);
+
+220  
+STATUS_SUCCESS
+;
+
+221 
+	}
+}
+
+223 
+NTSTATUS
+ 
+	$drvR—dPciCÚfig
+(
+IN
+ 
+Pdrv_DEVICE_EXTENSION
+ 
+pDevExt
+, IN 
+PIO_STACK_LOCATION
+ 
+pI½Sck
+)
+
+225 
+i
+;
+
+226 
+ULONG
+ 
+šdex
+;
+
+227 
+ULONG
+ 
+couÁ
+;
+
+228 
+PCM_RESOURCE_LIST
+ 
+pResourûLi¡
+, 
+pResourûLi¡T¿n¦©ed
+;
+
+229 
+PCM_PARTIAL_RESOURCE_LIST
+ 
+´l
+, 
+´lT¿n¦©ed
+;
+
+230 
+PCM_PARTIAL_RESOURCE_DESCRIPTOR
+ 
+´d
+, 
+´dT¿n¦©ed
+;
+
+231 
+PCM_FULL_RESOURCE_DESCRIPTOR
+ 
+äd
+, 
+ädT¿n¦©ed
+;
+
+232 
+ULONG
+ 
+NumCouÁ
+;
+
+233 
+NTSTATUS
+ 
+¡©us
+ = 
+STATUS_SUCCESS
+;
+
+234 
+DEVICE_DESCRIPTION
+ 
+DeviûDesütiÚ
+;
+
+235 
+INTERFACE_TYPE
+ 
+BusTy³
+;
+
+236 
+ULONG
+ 
+Junk
+;
+
+238 
+PUCHAR
+ 
+pBa£Mem0
+, 
+pBa£Mem2
+;
+
+239 
+ULONG
+ 
+v®ue
+ = 0;
+
+240 
+ULONG
+ 
+iCÁ
+ = 0;
+
+244 
+pResourûLi¡T¿n¦©ed
+ = 
+pI½Sck
+->
+P¬am‘”s
+.
+S¹Deviû
+.
+AÎoÿ‹dResourûsT¿n¦©ed
+;
+
+245 ifÐ(
+pResourûLi¡T¿n¦©ed
+ =ð
+NULL
+è|| (pResourûLi¡T¿n¦©ed->
+CouÁ
+ == 0) )
+
+247  (
+STATUS_INSUFFICIENT_RESOURCES
+);
+
+249 
+ädT¿n¦©ed
+ = &
+pResourûLi¡T¿n¦©ed
+->
+Li¡
+[0];
+
+250 
+´lT¿n¦©ed
+ = &
+ädT¿n¦©ed
+->
+P¬tŸlResourûLi¡
+;
+
+251 
+´dT¿n¦©ed
+ = 
+´lT¿n¦©ed
+->
+P¬tŸlDesütÜs
+;
+
+252 
+NumCouÁ
+ = 
+´lT¿n¦©ed
+->
+CouÁ
+;
+
+253 
+couÁ
+ = 0;
+
+254 
+šdex
+=0; index<
+NumCouÁ
+ ; 
+´dT¿n¦©ed
+++,index++ )
+
+256 
+´dT¿n¦©ed
+->
+Ty³
+)
+
+259 
+CmResourûTy³PÜt
+:
+
+260 
+pDevExt
+->
+ba£
+[
+couÁ
+].
+IoPÜtSize
+ = 
+´dT¿n¦©ed
+->
+u
+.
+PÜt
+.
+L’gth
+;
+
+261 
+pDevExt
+->
+ba£
+[
+couÁ
+].
+IoPÜtM­³dAdd»ss
+ = (
+PVOID
+)
+´dT¿n¦©ed
+->
+u
+.
+PÜt
+.
+S¹
+.
+LowP¬t
+;
+
+262 
+pDevExt
+->
+ba£
+[
+couÁ
+].
+WhichM­³d
+ = 
+TYPE_IO
+;
+
+263 
+couÁ
+++;
+
+266 
+CmResourûTy³MemÜy
+:
+
+267 
+pDevExt
+->
+ba£
+[
+couÁ
+].
+MemÜySize
+ = 
+´dT¿n¦©ed
+->
+u
+.
+MemÜy
+.
+L’gth
+;
+
+268 
+pDevExt
+->
+ba£
+[
+couÁ
+].
+MemÜyRegi¡”Add»ss
+ = 
+´dT¿n¦©ed
+->
+u
+.
+MemÜy
+.
+S¹
+;
+
+269 
+pDevExt
+->
+ba£
+[
+couÁ
+].
+MemÜyM­³dAdd»ss
+ = 
+	`MmM­IoS·û
+Ð
+´dT¿n¦©ed
+->
+u
+.
+MemÜy
+.
+S¹
+,…rdT¿n¦©ed->u.MemÜy.
+L’gth
+, 
+MmNÚCached
+);
+
+270 
+pDevExt
+->
+ba£
+[
+couÁ
+].
+WhichM­³d
+ = 
+TYPE_MEM
+;
+
+271 
+couÁ
+++;
+
+274 
+CmResourûTy³IÁ”ru±
+:
+
+275 
+pDevExt
+->
+IÁ”ru±Lev–
+ = (
+KIRQL
+)
+´dT¿n¦©ed
+->
+u
+.
+IÁ”ru±
+.
+Lev–
+;
+
+276 
+pDevExt
+->
+IÁ”ru±VeùÜ
+ = 
+´dT¿n¦©ed
+->
+u
+.
+IÁ”ru±
+.
+VeùÜ
+;
+
+277 
+pDevExt
+->
+IÁ”ru±Affš™y
+ = 
+´dT¿n¦©ed
+->
+u
+.
+IÁ”ru±
+.
+Affš™y
+;
+
+278 
+pDevExt
+->
+IÁ”ru±Mode
+ = (
+´dT¿n¦©ed
+->
+FÏgs
+ =ð
+CM_RESOURCE_INTERRUPT_LATCHED
+è? 
+L©ched
+ : 
+Lev–S’s™ive
+;
+
+279 
+pDevExt
+->
+IÁ”ru±Sh¬e
+ = (
+´dT¿n¦©ed
+->
+Sh¬eDi¥os™iÚ
+ =ð
+CmResourûSh¬eSh¬ed
+);
+
+280 
+pDevExt
+->
+IÁ”ru±SuµÜt
+ = 1;
+
+283 
+CmResourûTy³Dma
+:
+
+286 
+CmResourûTy³BusNumb”
+:
+
+293 iàÐ
+couÁ
+ == 0 )
+
+295  (
+STATUS_UNSUCCESSFUL
+);
+
+300 
+PCI_SLOT_NUMBER
+ 
+¦Ù_numb”
+;
+
+301 
+	`IoG‘DeviûPrÝ”ty
+Ð
+pDevExt
+->
+PhysiÿlDeviûObjeù
+, 
+DeviûPrÝ”tyAdd»ss
+, (
+ULONG
+), &
+¦Ù_numb”
+, &
+Junk
+);
+
+302 
+pDevExt
+->
+SlÙNumb”
+ = (
+¦Ù_numb”
+.
+u
+.
+AsULONG
+ >> 16);
+
+307 
+PCI_SLOT_NUMBER
+ 
+¦Ù_numb”
+;
+
+308 
+	`IoG‘DeviûPrÝ”ty
+Ð
+pDevExt
+->
+PhysiÿlDeviûObjeù
+, 
+DeviûPrÝ”tyBusNumb”
+, (
+ULONG
+), &
+¦Ù_numb”
+, &
+Junk
+);
+
+309 
+pDevExt
+->
+BusNumb”
+ = (
+¦Ù_numb”
+.
+u
+.
+AsULONG
+);
+
+335 if(
+pDevExt
+->
+IÁ”ru±SuµÜt
+ != 0)
+
+339 
+	`IoIn™ŸlizeDpcReque¡
+(
+pDevExt
+->
+FunùiÚ®DeviûObjeù
+, 
+DpcFÜI¤
+);
+
+344 
+¡©us
+ = 
+	`IoCÚÃùIÁ”ru±Ex
+Ð&
+pDevExt
+->
+IÁ”ru±Objeù
+,
+
+345 (
+PKSERVICE_ROUTINE
+)
+IÁ”ru±HªdËr
+,
+
+346 
+pDevExt
+,
+
+347 
+NULL
+,
+
+348 
+pDevExt
+->
+IÁ”ru±VeùÜ
+,
+
+349 
+pDevExt
+->
+IÁ”ru±Lev–
+,
+
+350 
+pDevExt
+->
+IÁ”ru±Lev–
+,
+
+351 
+pDevExt
+->
+IÁ”ru±Mode
+,
+
+352 
+pDevExt
+->
+IÁ”ru±Sh¬e
+,
+
+353 
+pDevExt
+->
+IÁ”ru±Affš™y
+,
+
+354 
+FALSE
+ );
+
+355 ifÐ!
+	`NT_SUCCESS
+(
+¡©us
+) )
+
+357 (
+¡©us
+);
+
+366  (
+STATUS_SUCCESS
+);
+
+367 
+	}
+}
+
+	@stdafx.cpp
+
+2 
+	~"¡dafx.h
+"
+
+	@stdafx.h
+
+1 #iâdeà
+_WIN32_WINNT
+
+
+2 
+	#_WIN32_WINNT
+ 0x0501
+
+4 
+
+	)
+
+5 #ifdeà
+__ýlu¥lus
+
+
+11 
+	~"Visu®DDKH–³rs.h
+"
+
+12 
+	~<Áddk.h
+>
+
+13 
+	~<Ádd¡Ü.h
+>
+
+14 
+	~<mouÁdev.h
+>
+
+15 
+	~<ÁddvÞ.h
+>
+
+16 
+	~<Áifs.h
+>
+
+19 #ifdeà
+__ýlu¥lus
+
+
+	@
+1
+.
+0
+4
+47
+VisualDDKHelpers.h
+drv.cpp
+stdafx.cpp
+stdafx.h

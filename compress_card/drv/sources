@@ -1,0 +1,5 @@
+TARGETNAME=drv
+TARGETTYPE=DRIVER
+
+SOURCES=stdafx.cpp \
+	drv.cpp
