@@ -19,14 +19,6 @@
 		http://bazislib.sysprogs.org/
 */
 
-void drvUnload(IN PDRIVER_OBJECT DriverObject);
-NTSTATUS drvCreateClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS drvDefaultHandler(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS drvAddDevice(IN PDRIVER_OBJECT  DriverObject, IN PDEVICE_OBJECT  PhysicalDeviceObject);
-NTSTATUS drvPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS drvRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-VOID drvDpcForIsr(IN PKDPC Dpc, IN struct _DEVICE_OBJECT *DeviceObject, INOUT struct _IRP *Irp, IN PVOID Context);
-
 typedef struct _deviceExtension
 {
 	PDEVICE_OBJECT DeviceObject;
@@ -36,18 +28,58 @@ typedef struct _deviceExtension
 
 	PIRP Irp;
 	KSPIN_LOCK SpinIrp;
-	KEVENT ReadEvent;
 
     PVOID MemBar0;
     ULONG nMemBar0Len;
-    PVOID MemBar1;
-    ULONG nMemBar1Len;
 
     PKINTERRUPT InterruptObject;
+
+	PVOID dmaBuffer;
+	ULONG nBufferLen;
+
+	ULONG nBytesMissed;
 } drv_DEVICE_EXTENSION, *Pdrv_DEVICE_EXTENSION;
+
+void drvUnload(IN PDRIVER_OBJECT DriverObject);
+NTSTATUS drvCreateClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS drvDefaultHandler(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS drvAddDevice(IN PDRIVER_OBJECT  DriverObject, IN PDEVICE_OBJECT  PhysicalDeviceObject);
+NTSTATUS drvPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS drvRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATION pIrpStack);
+VOID drvDpcForIsr(IN PKDPC Dpc, IN struct _DEVICE_OBJECT *DeviceObject, OPTIONAL struct _IRP *Irp, IN PVOID Context);
+BOOLEAN drvInterruptService(IN struct _KINTERRUPT  *Interrupt, IN PVOID  ServiceContext);
+NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 // {00ac1f07-61bb-4a65-9c83-6898b3802dd0}
 static const GUID GUID_drvInterface = {0xAC1F07, 0x61bb, 0x4a65, {0x9c, 0x83, 0x68, 0x98, 0xb3, 0x80, 0x2d, 0xd0 } };
+
+static const ULONG VERSION_BAR0 = 0x0000;
+static const ULONG RESET_BAR0 = 0x0004;
+static const ULONG WORK_MODE_BAR0 = 0x0008;
+static const ULONG GLOBAL_INT_MASK_BAR0 = 0x000C;
+static const ULONG INT_STATUS_BAR0 = 0x0010;
+static const ULONG INT_MASK_BAR0 = 0x0014;
+static const ULONG RESOLUTION_BAR0 = 0x0018;
+static const ULONG DMA_ADDR_BAR0 = 0x0020;
+static const ULONG DMA_LEN_BAR0 = 0x0024;
+static const ULONG DMA_START_BAR0 = 0x0028;
+static const ULONG QUANTIZATION_BAR1 = 0x0100;
+
+static const ULONG RESET_CMD = 0x00;
+static const ULONG WORK_MODE_JPEG_90 = 0x00;
+static const ULONG WORK_MODE_JPEG_80 = 0x01;
+static const ULONG WORK_MODE_JPEG_70 = 0x02;
+static const ULONG WORK_MODE_JPEG_60 = 0x03;
+static const ULONG WORK_MODE_PNG = 0x04;
+static const ULONG DMA_START_CMD = 0x01;
+
+
+#define IOCTL_VERSION CTL_CODE(FILE_DEVICE_UNKNOWN , 0x800 , METHOD_BUFFERED , FILE_READ_ACCESS)
+#define IOCTL_RESET CTL_CODE(FILE_DEVICE_UNKNOWN , 0x801 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
+#define IOCTL_SET_MODE CTL_CODE(FILE_DEVICE_UNKNOWN , 0x802 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
+#define IOCTL_SET_QUANT CTL_CODE(FILE_DEVICE_UNKNOWN , 0x803 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
+#define IOCTL_SET_RESOLUTION CTL_CODE(FILE_DEVICE_UNKNOWN , 0x804 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
 
 #ifdef __cplusplus
 extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING  RegistryPath);
@@ -63,7 +95,8 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING  Registr
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = drvCreateClose;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = drvCreateClose;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = drvPnP;
-	//DriverObject->MajorFunction[IRP_MJ_READ] = drvPnP;
+	DriverObject->MajorFunction[IRP_MJ_READ] = drvRead;
+	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = drvIOControl;
 
 	DriverObject->DriverUnload = drvUnload;
 	DriverObject->DriverStartIo = NULL;
@@ -119,6 +152,12 @@ NTSTATUS drvAddDevice(IN PDRIVER_OBJECT  DriverObject, IN PDEVICE_OBJECT  Physic
 	pExtension->Irp = NULL;
 //	KeInitializeSpinLock(&pExtension->SpinIrp);
 //	KeInitializeEvent(&pExtension->ReadEvent, SynchronizationEvent, FALSE);
+	pExtension->dmaBuffer = NULL;
+	pExtension->nBufferLen = 0;
+	pExtension->nBytesMissed = 0;
+
+	/*设置DPC*/
+	IoInitializeDpcRequest(pExtension->PhysicalDeviceObject, drvDpcForIsr);
 
 	status = IoRegisterDeviceInterface(PhysicalDeviceObject, &GUID_drvInterface, NULL, &pExtension->DeviceInterface);
 	ASSERT(NT_SUCCESS(status));
@@ -222,31 +261,56 @@ NTSTATUS drvPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 NTSTATUS drvRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-	Irp->IoStatus.Status = STATUS_SUCCESS;
-	Irp->IoStatus.Information = 0;
-	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	return STATUS_SUCCESS;
+	Pdrv_DEVICE_EXTENSION pDevExt;
+	PIO_STACK_LOCATION stack;
+	PHYSICAL_ADDRESS highestAddress;
+
+	pDevExt = (Pdrv_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+	if(pDevExt->Irp != NULL)
+	{
+		Irp->IoStatus.Status = STATUS_DEVICE_BUSY;
+		Irp->IoStatus.Information = 0;
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		return STATUS_SUCCESS;
+	}
+
+	stack = IoGetCurrentIrpStackLocation(Irp);
+
+	if(stack->Parameters.Read.Length >> 2 == 0)
+	{
+		Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+		Irp->IoStatus.Information = 0;
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		return STATUS_SUCCESS;
+	}
+
+	highestAddress.HighPart = 0;
+	highestAddress.LowPart = 0xffffffff;
+
+	pDevExt->Irp = Irp;
+	pDevExt->nBufferLen = (stack->Parameters.Read.Length >> 2) << 2;
+	pDevExt->dmaBuffer = MmAllocateContiguousMemory(pDevExt->nBufferLen , highestAddress);
+
+	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_ADDR_BAR0) , (ULONG)pDevExt->dmaBuffer);
+	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_LEN_BAR0) , pDevExt->nBufferLen);
+	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_START_BAR0) , DMA_START_CMD);
+
+	IoMarkIrpPending(Irp);
+
+	return STATUS_PENDING;
 }
 
 NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATION pIrpStack)
 {
-	int i;
 	ULONG index;
 	PCM_RESOURCE_LIST pResourceList, pResourceListTranslated;
-	PCM_PARTIAL_RESOURCE_LIST prl, prlTranslated;
-	PCM_PARTIAL_RESOURCE_DESCRIPTOR prd, prdTranslated;
-	PCM_FULL_RESOURCE_DESCRIPTOR frd, frdTranslated;
+	PCM_PARTIAL_RESOURCE_LIST prlTranslated;
+	PCM_PARTIAL_RESOURCE_DESCRIPTOR prdTranslated;
+	PCM_FULL_RESOURCE_DESCRIPTOR frdTranslated;
 	ULONG NumCount;
 	NTSTATUS status = STATUS_SUCCESS;
-	DEVICE_DESCRIPTION DeviceDescription;
-	INTERFACE_TYPE BusType;
-	ULONG Junk;
     IO_CONNECT_INTERRUPT_PARAMETERS params;
-
-	PUCHAR pBaseMem0, pBaseMem2;
-	ULONG value = 0;
-	ULONG iCnt = 0;
-
 
 	/*获取设备已经分配的资源*/	
 	pResourceListTranslated = pIrpStack->Parameters.StartDevice.AllocatedResourcesTranslated;
@@ -271,59 +335,46 @@ NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATIO
 			break;
 			/*Memory资源*/
 		case CmResourceTypeMemory:
-            if(iCnt == 0)
-            {
-    			pDevExt->nMemBar0Len = prdTranslated->u.Memory.Length;
-//			    pDevExt->base[count].MemoryRegisterAddress	= prdTranslated->u.Memory.Start;
-			    pDevExt->MemBar0 = MmMapIoSpace(prdTranslated->u.Memory.Start, prdTranslated->u.Memory.Length, MmNonCached);
-            }
-            else
-            {
-    			pDevExt->nMemBar1Len = prdTranslated->u.Memory.Length;
-//			    pDevExt->base[count].MemoryRegisterAddress	= prdTranslated->u.Memory.Start;
-			    pDevExt->MemBar1 = MmMapIoSpace(prdTranslated->u.Memory.Start, prdTranslated->u.Memory.Length, MmNonCached);
-            }
+			pDevExt->nMemBar0Len = prdTranslated->u.Memory.Length;
+			//pDevExt->base[count].MemoryRegisterAddress	= prdTranslated->u.Memory.Start;
+			pDevExt->MemBar0 = MmMapIoSpace(prdTranslated->u.Memory.Start, prdTranslated->u.Memory.Length, MmNonCached);
 			break;
 			/*中断资源*/
 		case CmResourceTypeInterrupt:
-			pDevExt->InterruptLevel	= (KIRQL)prdTranslated->u.Interrupt.Level;
-			pDevExt->InterruptVector	= prdTranslated->u.Interrupt.Vector;
-			pDevExt->InterruptAffinity	= prdTranslated->u.Interrupt.Affinity;
-			pDevExt->InterruptMode	= (prdTranslated->Flags == CM_RESOURCE_INTERRUPT_LATCHED) ? Latched : LevelSensitive;
-			pDevExt->InterruptShare	= (prdTranslated->ShareDisposition == CmResourceShareShared);
-			pDevExt->InterruptSupport	= 1;
+			RtlZeroMemory( &params, sizeof(IO_CONNECT_INTERRUPT_PARAMETERS) );
+			params.Version = CONNECT_FULLY_SPECIFIED;
+			params.FullySpecified.PhysicalDeviceObject = pDevExt->DeviceObject;
+			params.FullySpecified.InterruptObject = &(pDevExt->InterruptObject);
+			params.FullySpecified.ServiceRoutine = drvInterruptService;
+			params.FullySpecified.ServiceContext = pDevExt;
+			params.FullySpecified.FloatingSave = FALSE;
+			params.FullySpecified.SpinLock = NULL;
 
-            RtlZeroMemory(&params, sizeof(IO_CONNECT_INTERRUPT_PARAMETERS));
-            params.Version = CONNECT_MESSAGE_BASED;
-            params.MessageBased.PhysicalDeviceObject = pDevExt->PhysicalDeviceObject;
-            params.MessageBased.MessageServiceRoutine = deviceInterruptMessageService;
-            params.MessageBased.ServiceContext = ServiceContext;
-            params.MessageBased.SpinLock = NULL;
-            params.MessageBased.SynchronizeIrql = 0;
-            params.MessageBased.FloatingSave = FALSE;
-            params.MessageBased.FallBackServiceRoutine = deviceInterruptService;
+			if (prdTranslated->Flags & CM_RESOURCE_INTERRUPT_MESSAGE) {
+				// The resource is for a message-based interrupt. Use the u.MessageInterrupt.Translated member of IntResource.
 
+				params.FullySpecified.Vector = prdTranslated->u.MessageInterrupt.Translated.Vector;
+				params.FullySpecified.Irql = (KIRQL)prdTranslated->u.MessageInterrupt.Translated.Level;
+				params.FullySpecified.SynchronizeIrql = (KIRQL)prdTranslated->u.MessageInterrupt.Translated.Level;
+				params.FullySpecified.ProcessorEnableMask = prdTranslated->u.MessageInterrupt.Translated.Affinity;
+			} else {
+				// The resource is for a line-based interrupt. Use the u.Interrupt member of IntResource.
 
-    		/*注册中断处理程序*/
-    		status = IoConnectInterruptEx(   &pDevExt->InterruptObject,		//. Interrupt object pointer
-			(PKSERVICE_ROUTINE)InterruptHandler,	//. Interrupt processing routine name
-			pDevExt,								//. Context passed to interrupt handler
-			NULL, 									//. Spinlock
-			pDevExt->InterruptVector, 				//. Interrupt vector
-			pDevExt->InterruptLevel, 				//. Interrupt IRQL
-			pDevExt->InterruptLevel, 				//. Most significant IRQL
-			pDevExt->InterruptMode,					//. Levelsensitive value or latched value
-			pDevExt->InterruptShare,				//. Interrupt share
-			pDevExt->InterruptAffinity, 			//. Interrupt affinity
-			FALSE  );								//. x86 case FALSE
-    		if( !NT_SUCCESS(status) )
-    		{
-    			return(status);
-    		}
+				params.FullySpecified.Vector = prdTranslated->u.Interrupt.Vector;
+				params.FullySpecified.Irql = (KIRQL)prdTranslated->u.Interrupt.Level;
+				params.FullySpecified.SynchronizeIrql = (KIRQL)prdTranslated->u.Interrupt.Level;
+				params.FullySpecified.ProcessorEnableMask = prdTranslated->u.Interrupt.Affinity;
+			}
 
+			params.FullySpecified.InterruptMode = (prdTranslated->Flags & CM_RESOURCE_INTERRUPT_LATCHED ? Latched : LevelSensitive);
+			params.FullySpecified.ShareVector = (BOOLEAN)(prdTranslated->ShareDisposition == CmResourceShareShared);
 
-		    /*设置DPC*/
-    		IoInitializeDpcRequest(pDevExt->PhysicalDeviceObject, drvDpcForIsr);
+			status = IoConnectInterruptEx(&params);
+			if(!NT_SUCCESS(status))
+			{
+				return status;
+			}
+
 			break;
 			/*DMA资源*/
 		case CmResourceTypeDma:
@@ -335,66 +386,140 @@ NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATIO
 			break;
 		}
 	}
-	/* It is fails if there is no resource */
-	if ( count == 0 ) 
-	{
-		return (STATUS_UNSUCCESSFUL);
-	}
-
-	{
-		/*插槽编号*/
-		PCI_SLOT_NUMBER slot_number;
-		IoGetDeviceProperty( pDevExt->PhysicalDeviceObject,	DevicePropertyAddress,	sizeof(ULONG), &slot_number, &Junk);
-		pDevExt->SlotNumber = (slot_number.u.AsULONG >> 16);
-	}
-
-	{
-		/*总线编号*/
-		PCI_SLOT_NUMBER slot_number;
-		IoGetDeviceProperty( pDevExt->PhysicalDeviceObject,	DevicePropertyBusNumber, sizeof(ULONG), &slot_number, &Junk);
-		pDevExt->BusNumber = (slot_number.u.AsULONG);
-	}
-
-	/*本例中我们只使用了两个BAR*/
-	//pBaseMem0 = (PUCHAR)(pDevExt->base[0].MemoryMappedAddress);
-	//pBaseMem2 = (PUCHAR)(pDevExt->base[2].MemoryMappedAddress);
-
-	/*本设备我们使用了4124芯片作为PCI芯片，访问前需设置以下两个寄存器*/
-	//WRITE_REGISTER_ULONG( (PULONG)(pBaseMem2 + 0x808), 0x1F03C);
-	//WRITE_REGISTER_ULONG( (PULONG)(pBaseMem2 + 0x800), 0x25000);	
-
-	//do
-	//{
-	//	value = READ_REGISTER_ULONG( (PULONG)(pBaseMem2 + 0x808));
-	//	if ((value & 0xE0000000) == 0xE0000000)
-	//	{
-	//		break;
-	//	}
-	//	iCnt++;
-	//}while (iCnt < 10000000);
-	//DebugPrint("[0x808] = 0x%08X! \n", value);
-	//if (iCnt == 10000000)
-	//{
-	//	DebugPrint("*************** Clock unlock! \n");
-	//}
-
-	if(pDevExt->InterruptSupport != 0)
-	{
-
-
-
-
-	}
-
-
-
-	//DebugPrint("DemoPciStartDevice() End\n");
 
 	return (STATUS_SUCCESS);
 }
 
-VOID drvDpcForIsr(IN PKDPC Dpc, IN struct _DEVICE_OBJECT *DeviceObject, INOUT struct _IRP *Irp, IN PVOID Context)
+VOID drvDpcForIsr(IN PKDPC Dpc, IN struct _DEVICE_OBJECT *DeviceObject, OPTIONAL struct _IRP *Irp, IN PVOID Context)
 {
+	Pdrv_DEVICE_EXTENSION pDevExt;
+	ULONG nBytesRead , nBytesMissed;
+	ULONG i;
+	PVOID systemBuffer;
+
+	pDevExt = (Pdrv_DEVICE_EXTENSION)Context;
+
+	if(Irp == NULL)
+	{
+		return;
+	}
+
+	systemBuffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress , NormalPagePriority);
+	memcpy(systemBuffer , pDevExt->dmaBuffer , pDevExt->nBufferLen);
+	MmFreeContiguousMemory(pDevExt->dmaBuffer);
+
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Information = pDevExt->nBufferLen;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	pDevExt->dmaBuffer = NULL;
+	pDevExt->nBufferLen = 0;
+	pDevExt->Irp = NULL;
+
     return;
 }
 
+BOOLEAN drvInterruptService(IN struct _KINTERRUPT  *Interrupt, IN PVOID  ServiceContext)
+{
+	Pdrv_DEVICE_EXTENSION pDevExt;
+
+	//清中断？
+
+	pDevExt = (Pdrv_DEVICE_EXTENSION)ServiceContext;
+
+	IoRequestDpc(pDevExt->DeviceObject , pDevExt->Irp , ServiceContext);
+
+	return TRUE;
+}
+
+NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+{
+	PIO_STACK_LOCATION stack;
+	ULONG nBytesIn , nBytesOut , ctlCode;
+	PVOID buffer;
+	Pdrv_DEVICE_EXTENSION pDevExt;
+	ULONG mode , resolution;
+
+	pDevExt = (Pdrv_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	stack = IoGetCurrentIrpStackLocation(Irp);
+	nBytesIn = stack->Parameters.DeviceIoControl.InputBufferLength;
+	nBytesOut = stack->Parameters.DeviceIoControl.OutputBufferLength;
+	ctlCode = stack->Parameters.DeviceIoControl.IoControlCode;
+	buffer = Irp->AssociatedIrp.SystemBuffer;
+
+	switch(ctlCode)
+	{
+	case IOCTL_VERSION:
+		if(nBytesOut < sizeof(ULONG))
+		{
+			Irp->IoStatus.Information = 0;
+			Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+			break;
+		}
+
+		*((PULONG)buffer) = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + VERSION_BAR0));
+		Irp->IoStatus.Information = sizeof(ULONG);
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+
+		break;
+	case IOCTL_RESET:
+		WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESET_BAR0) , RESET_CMD);
+		Irp->IoStatus.Information = 0;
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+
+		break;
+	case IOCTL_SET_MODE:
+		if(nBytesIn < sizeof(ULONG))
+		{
+			Irp->IoStatus.Information = 0;
+			Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+			break;
+		}
+
+		mode = *((PULONG)buffer);
+		switch(mode)
+		{
+		case WORK_MODE_JPEG_90:
+		case WORK_MODE_JPEG_80:
+		case WORK_MODE_JPEG_70:
+		case WORK_MODE_JPEG_60:
+		case WORK_MODE_PNG:
+			WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + WORK_MODE_BAR0) , mode);
+			Irp->IoStatus.Information = 0;
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			break;
+		default:
+			Irp->IoStatus.Information = 0;
+			Irp->IoStatus.Status = STATUS_INVALID_VARIANT;
+			break;
+		}
+
+		break;
+	case IOCTL_SET_QUANT:
+		Irp->IoStatus.Information = 0;
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+		break;
+	case IOCTL_SET_RESOLUTION:
+		if(nBytesIn < sizeof(ULONG))
+		{
+			Irp->IoStatus.Information = 0;
+			Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+			break;
+		}
+
+		resolution = *((PULONG)buffer);
+		WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + WORK_MODE_BAR0) , resolution);
+
+		Irp->IoStatus.Information = 0;
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+		break;
+	default:
+		Irp->IoStatus.Information = 0;
+		Irp->IoStatus.Status = STATUS_INVALID_VARIANT;
+		break;
+	}
+
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	return Irp->IoStatus.Status;
+}

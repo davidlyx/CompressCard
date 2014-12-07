@@ -9,11 +9,11 @@ extern "C"
 #endif
 
 #include "VisualDDKHelpers.h"
+#include <ntifs.h>
 #include <ntddk.h>
 #include <ntddstor.h>
 #include <mountdev.h>
 #include <ntddvol.h>
-#include <ntifs.h>
 
 
 #ifdef __cplusplus

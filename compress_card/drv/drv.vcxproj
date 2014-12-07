@@ -78,7 +78,7 @@ build</NMakeReBuildCommandLine>
     <NMakeIncludeSearchPath>$(WDKPATH)\inc\ddk;$(WDKPATH)\inc\api;$(WDKPATH)\inc\crt;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <NMakeBuildCommandLine>call $(WDKPATH)\bin\setenv.bat $(WDKPATH) chk AMD64 win7
+    <NMakeBuildCommandLine>call $(WDKPATH)\bin\setenv.bat $(WDKPATH) chk x64 win7
 cd /d $(ProjectDir)
 build</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>rmdir /s /q $(ProjectDir)\objchk_win7_amd64</NMakeCleanCommandLine>

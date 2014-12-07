@@ -1,0 +1,43 @@
+﻿生成启动时间为 2014/12/7 22:46:00。
+     1>项目“D:\文档\压缩卡\src\CompressCard\compress_card\drv\drv.vcxproj”在节点 2 上(build 个目标)。
+     1>Build:
+         call C:\WinDDK\7600.16385.1\\bin\setenv.bat C:\WinDDK\7600.16385.1\ chk win7
+         cd /d D:\文档\压缩卡\src\CompressCard\compress_card\drv\
+         build
+         OACR monitor running already
+         path contains nonexistant c:\program files (x86)\microsoft visual studio 10.0\common7\tools\bin, removing
+         BUILD: Compile and Link for x86
+         
+         BUILD: Loading c:\winddk\7600.16385.1\build.dat...
+         
+         BUILD: corrupt database (Directory error)
+         
+         BUILD: Computing Include file dependencies:
+         
+         BUILD: Start time: Sun Dec 07 22:46:00 2014
+         BUILD: Examining d:\文档\压缩卡\src\compresscard\compress_card\drv directory for files to compile.
+         
+             d:\文档\压缩卡\src\compresscard\compress_card\drv 
+         
+         Invalidating OACR warning log for 'root:x86chk'
+         BUILD: Saving c:\winddk\7600.16385.1\build.dat...
+         
+         BUILD: Compiling and Linking d:\文档\压缩卡\src\compresscard\compress_card\drv directory
+         
+         Configuring OACR for 'root:x86chk' - <OACR on>
+         Compiling - drv.cpp
+         Linking Executable - objchk_win7_x86\i386\drv.sys
+         BUILD: Finish time: Sun Dec 07 22:46:08 2014
+         BUILD: Done
+         
+         
+         
+             3 files compiled - 1 Warning - 525 LPS
+         
+             1 executable built
+         
+     1>已完成生成项目“D:\文档\压缩卡\src\CompressCard\compress_card\drv\drv.vcxproj”(build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:08.17
