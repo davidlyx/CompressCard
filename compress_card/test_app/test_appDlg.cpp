@@ -51,6 +51,7 @@ END_MESSAGE_MAP()
 
 Ctest_appDlg::Ctest_appDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(Ctest_appDlg::IDD, pParent)
+	, m_csVersion(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	hHandle = INVALID_HANDLE_VALUE;
@@ -60,6 +61,8 @@ void Ctest_appDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_BUTTON_OPEN, cbtOpen);
+	DDX_Control(pDX, IDC_BUTTON_READ_VERSION, m_cbReadVersion);
+	DDX_Text(pDX, IDC_EDIT_VERSION, m_csVersion);
 }
 
 BEGIN_MESSAGE_MAP(Ctest_appDlg, CDialogEx)
@@ -67,6 +70,7 @@ BEGIN_MESSAGE_MAP(Ctest_appDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_OPEN, &Ctest_appDlg::OnBnClickedButtonOpen)
+	ON_BN_CLICKED(IDC_BUTTON_READ_VERSION, &Ctest_appDlg::OnBnClickedButtonReadVersion)
 END_MESSAGE_MAP()
 
 
@@ -102,6 +106,7 @@ BOOL Ctest_appDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	m_cbReadVersion.EnableWindow(FALSE);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -169,6 +174,7 @@ void Ctest_appDlg::OnBnClickedButtonOpen()
 		CloseHandle(hHandle);
 		hHandle = INVALID_HANDLE_VALUE;
 		cbtOpen.SetWindowTextW(_T("打开设备"));
+		m_cbReadVersion.EnableWindow(FALSE);
 		return;
 	}
 
@@ -223,7 +229,34 @@ void Ctest_appDlg::OnBnClickedButtonOpen()
 	if(hHandle != INVALID_HANDLE_VALUE)
 	{
 		cbtOpen.SetWindowTextW(_T("关闭设备"));
+		m_cbReadVersion.EnableWindow(TRUE);
 	}
+	else
+	{
+		DWORD dwError;
+		dwError = GetLastError();
+		m_csVersion.Format(_T("%d") , dwError);
+		UpdateData(FALSE);
+	}
+
+	return;
+}
+
+
+void Ctest_appDlg::OnBnClickedButtonReadVersion()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	ULONG nVersion;
+	DWORD nRead;
+
+	if(DeviceIoControl(hHandle , IOCTL_VERSION , NULL , 0 , &nVersion , sizeof(nVersion) , &nRead , NULL) != TRUE)
+	{
+		MessageBox(_T("DeviceIoControl error"));
+		return;
+	}
+
+	m_csVersion.Format(_T("%08X") , nVersion);
+	UpdateData(FALSE);
 
 	return;
 }

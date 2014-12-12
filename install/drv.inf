@@ -1,0 +1,63 @@
+[Version]
+Signature="$WINDOWS NT$"
+;Class=Ports
+;ClassGuid={4d36e978-e325-11ce-bfc1-08002be10318}
+Class = System
+ClassGuid = {4d36e97d-e325-11ce-bfc1-08002be10318}
+Provider=%VisualDDK%
+DriverVer=12/12/2014, 1.00.0000
+CatalogFile=drv.cat
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[SourceDisksNames.x86]
+1 = %DiskId1%,,,
+
+[SourceDisksNames.amd64]
+1 = %DiskId1%,,,
+
+[SourceDisksFiles.x86]
+drv.sys  = 1,\x86
+
+[SourceDisksFiles.amd64]
+drv.sys  = 1,\x64
+
+[Manufacturer]
+%VisualDDK%=Standard, NTamd64
+
+[Standard]
+;%drv.DeviceDesc%=drv_Device, root\compress_card
+%drv.DeviceDesc%=drv_Device, PCI\VEN_10EE&DEV_0007&SUBSYS_000710EE&REV_00
+
+[Standard.NTamd64]
+;%drv.DeviceDesc%=drv_Device, root\compress_card
+%drv.DeviceDesc%=drv_Device, PCI\VEN_10EE&DEV_0007&SUBSYS_000710EE&REV_00
+
+[drv_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+drv.sys,,,2
+
+;-------------- Service installation
+[drv_Device.NT.Services]
+AddService = drv,%SPSVCINST_ASSOCSERVICE%, dev_Service_Inst
+
+; -------------- busenum driver install sections
+[dev_Service_Inst]
+DisplayName    = %dev.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START 
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\drv.sys
+LoadOrderGroup = Extended Base
+
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+;VisualDDK = "VisualDDK"
+VisualDDK = "MicroFat"
+DiskId1 = "drv Installation Disk #1"
+drv.DeviceDesc = "drv device"
+dev.SVCDESC = "drv driver"

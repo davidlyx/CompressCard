@@ -99,7 +99,6 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING  Registr
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = drvIOControl;
 
 	DriverObject->DriverUnload = drvUnload;
-	DriverObject->DriverStartIo = NULL;
 	DriverObject->DriverExtension->AddDevice = drvAddDevice;
 
 	return STATUS_SUCCESS;
@@ -157,7 +156,7 @@ NTSTATUS drvAddDevice(IN PDRIVER_OBJECT  DriverObject, IN PDEVICE_OBJECT  Physic
 	pExtension->nBytesMissed = 0;
 
 	/*ÉèÖÃDPC*/
-	IoInitializeDpcRequest(pExtension->PhysicalDeviceObject, drvDpcForIsr);
+	IoInitializeDpcRequest(pExtension->DeviceObject, drvDpcForIsr);
 
 	status = IoRegisterDeviceInterface(PhysicalDeviceObject, &GUID_drvInterface, NULL, &pExtension->DeviceInterface);
 	ASSERT(NT_SUCCESS(status));
@@ -228,17 +227,19 @@ NTSTATUS drvPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 			if(NT_SUCCESS(status))
 			{
 				IoSetDeviceInterfaceState(&pExt->DeviceInterface, TRUE);
-			}			
+			}
 		}
 
 		Irp->IoStatus.Status = status;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
 		return STATUS_SUCCESS;
+		break;
 
 	case IRP_MN_QUERY_REMOVE_DEVICE:
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
 		return STATUS_SUCCESS;
+		break;
 
 	case IRP_MN_REMOVE_DEVICE:
 		IoSetDeviceInterfaceState(&pExt->DeviceInterface, FALSE);
@@ -249,12 +250,14 @@ NTSTATUS drvPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
 		return STATUS_SUCCESS;
+		break;
 
 	case IRP_MN_QUERY_PNP_DEVICE_STATE:
 		status = drvForwardIrpSynchronous(DeviceObject, Irp);
 		Irp->IoStatus.Information = 0;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
 		return status;
+		break;
 	}
 	return drvDefaultHandler(DeviceObject, Irp);
 }
@@ -369,11 +372,11 @@ NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATIO
 			params.FullySpecified.InterruptMode = (prdTranslated->Flags & CM_RESOURCE_INTERRUPT_LATCHED ? Latched : LevelSensitive);
 			params.FullySpecified.ShareVector = (BOOLEAN)(prdTranslated->ShareDisposition == CmResourceShareShared);
 
-			status = IoConnectInterruptEx(&params);
-			if(!NT_SUCCESS(status))
-			{
-				return status;
-			}
+			//status = IoConnectInterruptEx(&params);
+			//if(!NT_SUCCESS(status))
+			//{
+			//	return status;
+			//}
 
 			break;
 			/*DMA×ÊÔ´*/
@@ -399,7 +402,7 @@ VOID drvDpcForIsr(IN PKDPC Dpc, IN struct _DEVICE_OBJECT *DeviceObject, OPTIONAL
 
 	pDevExt = (Pdrv_DEVICE_EXTENSION)Context;
 
-	if(Irp == NULL)
+	if(pDevExt->Irp == NULL)
 	{
 		return;
 	}
@@ -427,7 +430,10 @@ BOOLEAN drvInterruptService(IN struct _KINTERRUPT  *Interrupt, IN PVOID  Service
 
 	pDevExt = (Pdrv_DEVICE_EXTENSION)ServiceContext;
 
-	IoRequestDpc(pDevExt->DeviceObject , pDevExt->Irp , ServiceContext);
+	if(pDevExt->Irp != NULL)
+	{
+		IoRequestDpc(pDevExt->DeviceObject , pDevExt->Irp , ServiceContext);
+	}
 
 	return TRUE;
 }
