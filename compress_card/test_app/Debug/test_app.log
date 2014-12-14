@@ -1,36 +1,48 @@
-﻿生成启动时间为 2014/12/12 23:31:28。
-     1>项目“D:\文档\压缩卡\src\CompressCard\compress_card\test_app\test_app.vcxproj”在节点 2 上(build 个目标)。
-     1>InitializeBuildStatus:
-         正在对“Debug\test_app.unsuccessfulbuild”执行 Touch 任务。
+﻿生成启动时间为 2014/12/14 20:52:08。
+     1>项目“G:\CompressCard\compress_card\test_app\test_app.vcxproj”在节点 2 上(rebuild 个目标)。
+     1>_PrepareForClean:
+         正在删除文件“Debug\test_app.lastbuildstate”。
+       InitializeBuildStatus:
+         正在创建“Debug\test_app.unsuccessfulbuild”，因为已指定“AlwaysCreate”。
        ClCompile:
-         正在删除文件“Debug\test_app.pch”。
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"Debug\test_app.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         G:\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"Debug\test_app.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
          stdafx.cpp
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\test_app.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt test_app.cpp test_appDlg.cpp
+         G:\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\test_app.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt test_app.cpp test_appDlg.cpp
          test_appDlg.cpp
+     1>g:\compresscard\compress_card\test_app\test_appdlg.cpp(416): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 g:\microsoft visual studio 10.0\vc\include\wchar.h(797) : 参见“swscanf”的声明
+     1>g:\compresscard\compress_card\test_app\test_appdlg.cpp(417): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 g:\microsoft visual studio 10.0\vc\include\wchar.h(797) : 参见“swscanf”的声明
+     1>g:\compresscard\compress_card\test_app\test_appdlg.cpp(461): warning C4244: “=”: 从“DWORD”转换到“BYTE”，可能丢失数据
+     1>g:\compresscard\compress_card\test_app\test_appdlg.cpp(511): warning C4244: “=”: 从“DWORD”转换到“BYTE”，可能丢失数据
          test_app.cpp
          正在生成代码...
        ResourceCompile:
-         所有输出均为最新。
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _DEBUG /D _UNICODE /D UNICODE /l"0x0804" /IDebug\ /nologo /fo"Debug\test_app.res" test_app.rc 
        ManifestResourceCompile:
-         所有输出均为最新。
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\test_app.exe.embed.manifest.res" Debug\test_app_manifest.rc 
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\文档\压缩卡\src\CompressCard\compress_card\Debug\test_app.exe" /INCREMENTAL /NOLOGO Setupapi.lib /MANIFEST /ManifestFile:"Debug\test_app.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"D:\文档\压缩卡\src\CompressCard\compress_card\Debug\test_app.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\文档\压缩卡\src\CompressCard\compress_card\Debug\test_app.lib" /MACHINE:X86 Debug\test_app.res
+         G:\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"G:\CompressCard\compress_card\Debug\test_app.exe" /INCREMENTAL /NOLOGO Setupapi.lib /MANIFEST /ManifestFile:"Debug\test_app.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"G:\CompressCard\compress_card\Debug\test_app.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE /NXCOMPAT /IMPLIB:"G:\CompressCard\compress_card\Debug\test_app.lib" /MACHINE:X86 Debug\test_app.res
          Debug\test_app.exe.embed.manifest.res
          Debug\stdafx.obj
          Debug\test_app.obj
          Debug\test_appDlg.obj
        Manifest:
-         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\test_app.exe.embed.manifest" /manifest Debug\test_app.exe.intermediate.manifest "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\Include\Manifest\dpiaware.manifest"
-         所有输出均为最新。
+         正在删除文件“Debug\test_app.exe.embed.manifest”。
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\test_app.exe.embed.manifest" /manifest Debug\test_app.exe.intermediate.manifest "G:\Microsoft Visual Studio 10.0\VC\Include\Manifest\dpiaware.manifest"
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\test_app.exe.embed.manifest.res" Debug\test_app_manifest.rc 
        LinkEmbedManifest:
-         所有输出均为最新。
-         test_app.vcxproj -> D:\文档\压缩卡\src\CompressCard\compress_card\Debug\test_app.exe
+         G:\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"G:\CompressCard\compress_card\Debug\test_app.exe" /INCREMENTAL /NOLOGO Setupapi.lib /MANIFEST /ManifestFile:"Debug\test_app.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"G:\CompressCard\compress_card\Debug\test_app.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE /NXCOMPAT /IMPLIB:"G:\CompressCard\compress_card\Debug\test_app.lib" /MACHINE:X86 Debug\test_app.res
+         Debug\test_app.exe.embed.manifest.res
+         Debug\stdafx.obj
+         Debug\test_app.obj
+         Debug\test_appDlg.obj
+         test_app.vcxproj -> G:\CompressCard\compress_card\Debug\test_app.exe
        FinalizeBuildStatus:
          正在删除文件“Debug\test_app.unsuccessfulbuild”。
          正在对“Debug\test_app.lastbuildstate”执行 Touch 任务。
-     1>已完成生成项目“D:\文档\压缩卡\src\CompressCard\compress_card\test_app\test_app.vcxproj”(build 个目标)的操作。
+     1>已完成生成项目“G:\CompressCard\compress_card\test_app\test_app.vcxproj”(rebuild 个目标)的操作。
 
 生成成功。
 
-已用时间 00:00:06.61
+已用时间 00:00:04.92

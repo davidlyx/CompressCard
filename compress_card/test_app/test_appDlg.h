@@ -12,6 +12,20 @@
 #define IOCTL_SET_MODE CTL_CODE(FILE_DEVICE_UNKNOWN , 0x802 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
 #define IOCTL_SET_QUANT CTL_CODE(FILE_DEVICE_UNKNOWN , 0x803 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
 #define IOCTL_SET_RESOLUTION CTL_CODE(FILE_DEVICE_UNKNOWN , 0x804 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
+#define IOCTL_SET_QUANTIZATION_1 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x805 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
+#define IOCTL_SET_QUANTIZATION_2 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x806 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
+#define IOCTL_READ_QUANTIZATION_1 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x807 , METHOD_BUFFERED , FILE_READ_ACCESS)
+#define IOCTL_READ_QUANTIZATION_2 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x808 , METHOD_BUFFERED , FILE_READ_ACCESS)
+
+
+
+static const ULONG WORK_MODE_JPEG_90 = 0x00;
+static const ULONG WORK_MODE_JPEG_80 = 0x01;
+static const ULONG WORK_MODE_JPEG_70 = 0x02;
+static const ULONG WORK_MODE_JPEG_60 = 0x03;
+static const ULONG WORK_MODE_PNG = 0x04;
+
+static const ULONG QUANTIZATION_LEN = 1024;
 
 // Ctest_appDlg ¶Ô»°¿ò
 class Ctest_appDlg : public CDialogEx
@@ -45,4 +59,30 @@ public:
 	CButton m_cbReadVersion;
 	CString m_csVersion;
 	afx_msg void OnBnClickedButtonReadVersion();
+	afx_msg void OnBnClickedButtonReset();
+	CButton m_cbReset;
+	CButton m_cbSetMode;
+	CButton m_cbReadMode;
+	CComboBox m_cbMode;
+	CString m_nMode;
+	CButton m_cbSetRes;
+	CButton m_cbReadRes;
+	CString m_csResHor;
+	CString m_csResVer;
+	afx_msg void OnBnClickedButtonSetMode();
+	afx_msg void OnBnClickedButtonReadMode();
+	afx_msg void OnBnClickedButtonSetRes();
+	afx_msg void OnBnClickedButtonReadRes();
+	CString m_csModeCur;
+	CString m_csResHorCur;
+	CString m_csResVerCur;
+	afx_msg void OnBnClickedButtonSetQuant1();
+	afx_msg void OnBnClickedButtonReadQuant1();
+	afx_msg void OnBnClickedButtonSetQuant2();
+	afx_msg void OnBnClickedButtonReadQuant2();
+	CString m_csQuant;
+	CButton m_cbSetQuant1;
+	CButton m_cbReadQuant1;
+	CButton m_cbSetQuant2;
+	CButton m_cbReadQuant2;
 };

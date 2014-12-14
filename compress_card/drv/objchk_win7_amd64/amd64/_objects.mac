@@ -9,7 +9,9 @@ AMD64_OBJECTS=\
 
 
 # lowercased
-BASEDIR=c:\winddk\7600.16385.1
-OBJECT_ROOT=c:\winddk\7600.16385.1
-MAKEDIR_LOWERCASE=d:\OBJ_PATH=d:\CONCURRENT_MIDL=0
+BASEDIR=g:\winddk\7600.16385.1
+OBJECT_ROOT=g:\winddk\7600.16385.1
+MAKEDIR_LOWERCASE=g:\compresscard\compress_card\drv
+OBJ_PATH=g:\compresscard\compress_card\drv
+CONCURRENT_MIDL=0
 CONCURRENT_MANIFEST_BUILD=0

@@ -64,7 +64,8 @@ static const ULONG RESOLUTION_BAR0 = 0x0018;
 static const ULONG DMA_ADDR_BAR0 = 0x0020;
 static const ULONG DMA_LEN_BAR0 = 0x0024;
 static const ULONG DMA_START_BAR0 = 0x0028;
-static const ULONG QUANTIZATION_BAR1 = 0x0100;
+static const ULONG QUANTIZATION_1_BAR0 = 0x3000;
+static const ULONG QUANTIZATION_2_BAR0 = 0x3400;
 
 static const ULONG RESET_CMD = 0x00;
 static const ULONG WORK_MODE_JPEG_90 = 0x00;
@@ -74,12 +75,18 @@ static const ULONG WORK_MODE_JPEG_60 = 0x03;
 static const ULONG WORK_MODE_PNG = 0x04;
 static const ULONG DMA_START_CMD = 0x01;
 
+static const ULONG QUANTIZATION_LEN = 1024;
+
 
 #define IOCTL_VERSION CTL_CODE(FILE_DEVICE_UNKNOWN , 0x800 , METHOD_BUFFERED , FILE_READ_ACCESS)
 #define IOCTL_RESET CTL_CODE(FILE_DEVICE_UNKNOWN , 0x801 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
 #define IOCTL_SET_MODE CTL_CODE(FILE_DEVICE_UNKNOWN , 0x802 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
 #define IOCTL_SET_QUANT CTL_CODE(FILE_DEVICE_UNKNOWN , 0x803 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
 #define IOCTL_SET_RESOLUTION CTL_CODE(FILE_DEVICE_UNKNOWN , 0x804 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
+#define IOCTL_SET_QUANTIZATION_1 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x805 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
+#define IOCTL_SET_QUANTIZATION_2 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x806 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
+#define IOCTL_READ_QUANTIZATION_1 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x807 , METHOD_BUFFERED , FILE_READ_ACCESS)
+#define IOCTL_READ_QUANTIZATION_2 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x808 , METHOD_BUFFERED , FILE_READ_ACCESS)
 
 #ifdef __cplusplus
 extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING  RegistryPath);
@@ -444,7 +451,7 @@ NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	ULONG nBytesIn , nBytesOut , ctlCode;
 	PVOID buffer;
 	Pdrv_DEVICE_EXTENSION pDevExt;
-	ULONG mode , resolution;
+	ULONG mode , resolution , i;
 
 	pDevExt = (Pdrv_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	stack = IoGetCurrentIrpStackLocation(Irp);
@@ -475,30 +482,24 @@ NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 		break;
 	case IOCTL_SET_MODE:
-		if(nBytesIn < sizeof(ULONG))
+		mode = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + WORK_MODE_BAR0));
+
+		if(nBytesIn == sizeof(ULONG))
+		{
+			WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + WORK_MODE_BAR0) , *((PULONG)buffer));
+		}
+		
+		if(nBytesOut == sizeof(ULONG))
+		{
+			*((PULONG)buffer) = mode;
+			Irp->IoStatus.Information = sizeof(ULONG);
+		}
+		else
 		{
 			Irp->IoStatus.Information = 0;
-			Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
-			break;
 		}
 
-		mode = *((PULONG)buffer);
-		switch(mode)
-		{
-		case WORK_MODE_JPEG_90:
-		case WORK_MODE_JPEG_80:
-		case WORK_MODE_JPEG_70:
-		case WORK_MODE_JPEG_60:
-		case WORK_MODE_PNG:
-			WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + WORK_MODE_BAR0) , mode);
-			Irp->IoStatus.Information = 0;
-			Irp->IoStatus.Status = STATUS_SUCCESS;
-			break;
-		default:
-			Irp->IoStatus.Information = 0;
-			Irp->IoStatus.Status = STATUS_INVALID_VARIANT;
-			break;
-		}
+		Irp->IoStatus.Status = STATUS_SUCCESS;
 
 		break;
 	case IOCTL_SET_QUANT:
@@ -506,18 +507,83 @@ NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 		break;
 	case IOCTL_SET_RESOLUTION:
-		if(nBytesIn < sizeof(ULONG))
+		resolution = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESOLUTION_BAR0));
+
+		if(nBytesIn == sizeof(ULONG))
+		{
+			WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESOLUTION_BAR0) , *((PULONG)buffer));
+		}
+		
+		if(nBytesOut == sizeof(ULONG))
+		{
+			*((PULONG)buffer) = resolution;
+			Irp->IoStatus.Information = sizeof(ULONG);
+		}
+		else
 		{
 			Irp->IoStatus.Information = 0;
-			Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
-			break;
 		}
 
-		resolution = *((PULONG)buffer);
-		WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + WORK_MODE_BAR0) , resolution);
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+
+		break;
+	case IOCTL_SET_QUANTIZATION_1:
+		if(nBytesIn == QUANTIZATION_LEN)
+		{
+			for(i = 0 ; i < QUANTIZATION_LEN / sizeof(ULONG) ; i++)
+			{
+				WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + QUANTIZATION_1_BAR0 + i * sizeof(ULONG)) , *((PULONG)buffer + i));
+			}
+		}
 
 		Irp->IoStatus.Information = 0;
 		Irp->IoStatus.Status = STATUS_SUCCESS;
+
+		break;
+	case IOCTL_SET_QUANTIZATION_2:
+		if(nBytesIn == QUANTIZATION_LEN)
+		{
+			for(i = 0 ; i < QUANTIZATION_LEN / sizeof(ULONG) ; i++)
+			{
+				WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + QUANTIZATION_2_BAR0 + i * sizeof(ULONG)) , *((PULONG)buffer + i));
+			}
+		}
+
+		Irp->IoStatus.Information = 0;
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+
+		break;
+	case IOCTL_READ_QUANTIZATION_1:
+		if(nBytesOut == QUANTIZATION_LEN)
+		{
+			for(i = 0 ; i < QUANTIZATION_LEN / sizeof(ULONG) ; i++)
+			{
+				*((PULONG)buffer + i) = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + QUANTIZATION_1_BAR0 + i * sizeof(ULONG)));
+			}
+			Irp->IoStatus.Information = QUANTIZATION_LEN;
+		}
+		else
+		{
+			Irp->IoStatus.Information = 0;
+		}
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+
+		break;
+	case IOCTL_READ_QUANTIZATION_2:
+		if(nBytesOut == QUANTIZATION_LEN)
+		{
+			for(i = 0 ; i < QUANTIZATION_LEN / sizeof(ULONG) ; i++)
+			{
+				*((PULONG)buffer + i) = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + QUANTIZATION_2_BAR0 + i * sizeof(ULONG)));
+			}
+			Irp->IoStatus.Information = QUANTIZATION_LEN;
+		}
+		else
+		{
+			Irp->IoStatus.Information = 0;
+		}
+		Irp->IoStatus.Status = STATUS_SUCCESS;
+
 		break;
 	default:
 		Irp->IoStatus.Information = 0;

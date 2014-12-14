@@ -1,44 +1,39 @@
-﻿生成启动时间为 2014/12/12 23:35:47。
-     1>项目“D:\文档\压缩卡\src\CompressCard\compress_card\drv\drv.vcxproj”在节点 2 上(build 个目标)。
+﻿生成启动时间为 2014/12/14 19:03:14。
+     1>项目“G:\CompressCard\compress_card\drv\drv.vcxproj”在节点 2 上(build 个目标)。
      1>Build:
-         call C:\WinDDK\7600.16385.1\\bin\setenv.bat C:\WinDDK\7600.16385.1\ chk x64 win7
-         cd /d D:\文档\压缩卡\src\CompressCard\compress_card\drv\
+         call G:\WinDDK\7600.16385.1\\bin\setenv.bat G:\WinDDK\7600.16385.1\ chk x64 win7
+         cd /d G:\CompressCard\compress_card\drv\
          build
-         Launching OACR monitor
-         path contains nonexistant c:\program files (x86)\microsoft visual studio 10.0\common7\tools\bin, removing
+         OACR monitor running already
+         path contains nonexistant g:\microsoft visual studio 10.0\common7\tools\bin, removing
          path contains nonexistant c:\program files (x86)\microsoft sdks\windows\v7.0a\\lib\win64, removing
+         path contains nonexistant c:\program files (x86)\windows7master, removing
          BUILD: Compile and Link for AMD64
          
-         BUILD: Loading c:\winddk\7600.16385.1\build.dat...
-         
-         BUILD: corrupt database (Directory error)
+         BUILD: Loading g:\winddk\7600.16385.1\build.dat...
          
          BUILD: Computing Include file dependencies:
          
-         BUILD: Start time: Fri Dec 12 23:35:47 2014
-         BUILD: Examining d:\文档\压缩卡\src\compresscard\compress_card\drv directory for files to compile.
+         BUILD: Start time: Sun Dec 14 19:03:14 2014
+         BUILD: Examining g:\compresscard\compress_card\drv directory for files to compile.
          
-             d:\文档\压缩卡\src\compresscard\compress_card\drv 
+             g:\compresscard\compress_card\drv 
          
          Invalidating OACR warning log for 'root:amd64chk'
-         BUILD: Saving c:\winddk\7600.16385.1\build.dat...
+         BUILD: Saving g:\winddk\7600.16385.1\build.dat...
          
-         BUILD: Compiling and Linking d:\文档\压缩卡\src\compresscard\compress_card\drv directory
+         BUILD: Compiling and Linking g:\compresscard\compress_card\drv directory
          
          Configuring OACR for 'root:amd64chk' - <OACR on>
-         Compiling - drv.cpp
-         Linking Executable - objchk_win7_amd64\amd64\drv.sys
-         BUILD: Finish time: Fri Dec 12 23:35:49 2014
+         BUILD: Finish time: Sun Dec 14 19:03:15 2014
          BUILD: Done
          
          
          
-             3 files compiled - 2 Warnings
+             0 files compiled - 3 Warnings
          
-             1 executable built
-         
-     1>已完成生成项目“D:\文档\压缩卡\src\CompressCard\compress_card\drv\drv.vcxproj”(build 个目标)的操作。
+     1>已完成生成项目“G:\CompressCard\compress_card\drv\drv.vcxproj”(build 个目标)的操作。
 
 生成成功。
 
-已用时间 00:00:02.66
+已用时间 00:00:00.85
