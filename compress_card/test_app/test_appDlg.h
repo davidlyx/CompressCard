@@ -16,6 +16,8 @@
 #define IOCTL_SET_QUANTIZATION_2 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x806 , METHOD_BUFFERED , FILE_WRITE_ACCESS)
 #define IOCTL_READ_QUANTIZATION_1 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x807 , METHOD_BUFFERED , FILE_READ_ACCESS)
 #define IOCTL_READ_QUANTIZATION_2 CTL_CODE(FILE_DEVICE_UNKNOWN , 0x808 , METHOD_BUFFERED , FILE_READ_ACCESS)
+#define IOCTL_READ_ADDR CTL_CODE(FILE_DEVICE_UNKNOWN , 0x809 , METHOD_BUFFERED , FILE_READ_ACCESS)
+#define IOCTL_WRITE_ADDR CTL_CODE(FILE_DEVICE_UNKNOWN , 0x80A , METHOD_BUFFERED , FILE_WRITE_ACCESS)
 
 
 
@@ -85,4 +87,12 @@ public:
 	CButton m_cbReadQuant1;
 	CButton m_cbSetQuant2;
 	CButton m_cbReadQuant2;
+	CButton m_cbReadAddr;
+	CButton m_cbWriteAddr;
+	CString m_csReadAddr;
+	CString m_csWriteAddr;
+	CString m_csReadData;
+	CString m_csWriteData;
+	afx_msg void OnBnClickedButtonReadAddr();
+	afx_msg void OnBnClickedButtonWriteAddr();
 };

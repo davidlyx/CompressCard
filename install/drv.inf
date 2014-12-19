@@ -29,12 +29,15 @@ drv.sys  = 1,\x64
 [Standard]
 ;%drv.DeviceDesc%=drv_Device, root\compress_card
 %drv.DeviceDesc%=drv_Device, PCI\VEN_10EE&DEV_0007&SUBSYS_000710EE&REV_00
+;%drv.DeviceDesc%=drv_Device, PCI\VEN_1912&DEV_0014&SUBSYS_00000000&REV_03
 
 [Standard.NTamd64]
 ;%drv.DeviceDesc%=drv_Device, root\compress_card
 %drv.DeviceDesc%=drv_Device, PCI\VEN_10EE&DEV_0007&SUBSYS_000710EE&REV_00
+;%drv.DeviceDesc%=drv_Device, PCI\VEN_1912&DEV_0014&SUBSYS_00000000&REV_03
 
 [drv_Device.NT]
+AddReg=Drivers_Reg
 CopyFiles=Drivers_Dir
 
 [Drivers_Dir]
@@ -59,5 +62,12 @@ SPSVCINST_ASSOCSERVICE= 0x00000002
 ;VisualDDK = "VisualDDK"
 VisualDDK = "MicroFat"
 DiskId1 = "drv Installation Disk #1"
-drv.DeviceDesc = "drv device"
-dev.SVCDESC = "drv driver"
+;drv.DeviceDesc = "drv device"
+drv.DeviceDesc = "CompressCard"
+;dev.SVCDESC = "drv driver"
+dev.SVCDESC = "CompressCard"
+
+[Drivers_Reg]
+HKR, Interrupt Management,, 0x00000010
+HKR, Interrupt Management\MessageSignaledInterruptProperties,, 0x00000010
+HKR, Interrupt Management\MessageSignaledInterruptProperties, MSISupported, 0x00010001, 1
