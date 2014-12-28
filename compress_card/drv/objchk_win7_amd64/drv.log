@@ -1,4 +1,4 @@
-﻿生成启动时间为 2014/12/28 15:42:22。
+﻿生成启动时间为 2014/12/28 15:45:29。
      1>项目“D:\文档\压缩卡\src\CompressCard\compress_card\drv\drv.vcxproj”在节点 2 上(build 个目标)。
      1>Build:
          call C:\WinDDK\7600.16385.1\\bin\setenv.bat C:\WinDDK\7600.16385.1\ chk x64 win7
@@ -15,11 +15,12 @@
          
          BUILD: Computing Include file dependencies:
          
-         BUILD: Start time: Sun Dec 28 15:42:25 2014
+         BUILD: Start time: Sun Dec 28 15:45:29 2014
          BUILD: Examining d:\文档\压缩卡\src\compresscard\compress_card\drv directory for files to compile.
          
              d:\文档\压缩卡\src\compresscard\compress_card\drv 
          
+         Auto-cleaning queue for 'root:amd64chk' (1 of 1 file(s) removed)
          Invalidating OACR warning log for 'root:amd64chk'
          BUILD: Saving c:\winddk\7600.16385.1\build.dat...
          
@@ -28,7 +29,7 @@
          Configuring OACR for 'root:amd64chk' - <OACR on>
          Compiling - drv.cpp
          Linking Executable - objchk_win7_amd64\amd64\drv.sys
-         BUILD: Finish time: Sun Dec 28 15:42:27 2014
+         BUILD: Finish time: Sun Dec 28 15:45:30 2014
          BUILD: Done
          
          
@@ -41,4 +42,4 @@
 
 生成成功。
 
-已用时间 00:00:05.74
+已用时间 00:00:01.62

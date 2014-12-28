@@ -56,6 +56,8 @@ VOID drvDpcForIsr(IN PKDPC Dpc, IN struct _DEVICE_OBJECT *DeviceObject, OPTIONAL
 BOOLEAN drvInterruptService(IN struct _KINTERRUPT  *Interrupt, IN PVOID  ServiceContext);
 NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 BOOLEAN drvInterruptMessageService(IN struct _KINTERRUPT  *Interrupt, IN PVOID  ServiceContext, IN ULONG  MessageId);
+VOID drvStartIO(IN PDEVICE_OBJECT DeviceObject , IN PIRP Irp);
+VOID drvOnCancelIrp(IN PDEVICE_OBJECT DeviceObject , IN PIRP Irp);
 
 // {00ac1f07-61bb-4a65-9c83-6898b3802dd0}
 static const GUID GUID_drvInterface = {0xAC1F07, 0x61bb, 0x4a65, {0x9c, 0x83, 0x68, 0x98, 0xb3, 0x80, 0x2d, 0xd0 } };
@@ -116,6 +118,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING  Registr
 	DriverObject->MajorFunction[IRP_MJ_READ] = drvRead;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = drvIOControl;
 
+	DriverObject->DriverStartIo = drvStartIO;
 	DriverObject->DriverUnload = drvUnload;
 	DriverObject->DriverExtension->AddDevice = drvAddDevice;
 
@@ -303,19 +306,7 @@ NTSTATUS drvPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 NTSTATUS drvRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-	Pdrv_DEVICE_EXTENSION pDevExt;
 	PIO_STACK_LOCATION stack;
-	PHYSICAL_ADDRESS highestAddress;
-
-	pDevExt = (Pdrv_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-	if(pDevExt->Irp != NULL)
-	{
-		Irp->IoStatus.Status = STATUS_DEVICE_BUSY;
-		Irp->IoStatus.Information = 0;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		return STATUS_DEVICE_BUSY;
-	}
 
 	stack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -327,21 +318,11 @@ NTSTATUS drvRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		return STATUS_BUFFER_OVERFLOW;
 	}
 
-	pDevExt->Irp = Irp;
+	IoMarkIrpPending(Irp);
 
-	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_ADDR_BAR0) , RtlUlongByteSwap((ULONG)pDevExt->dmaPhysicalAddr.LowPart));
-	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_LEN_BAR0) , RtlUlongByteSwap(pDevExt->nBufferLen));
-	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_START_BAR0) , RtlUlongByteSwap(DMA_START_CMD));
+	IoStartPacket(DeviceObject , Irp , 0 , drvOnCancelIrp);
 
-	//IoMarkIrpPending(Irp);
-
-	//return STATUS_PENDING;
-	//WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESET_BAR0) , RtlUlongByteSwap(0x01));
-	Irp->IoStatus.Status = STATUS_SUCCESS;
-	Irp->IoStatus.Information = 0;
-	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	pDevExt->Irp = NULL;
-	return STATUS_SUCCESS;
+	return STATUS_PENDING;
 }
 
 NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATION pIrpStack)
@@ -511,6 +492,8 @@ VOID drvDpcForIsr(IN PKDPC Dpc, IN struct _DEVICE_OBJECT *DeviceObject, OPTIONAL
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 	pDevExt->Irp = NULL;
+
+	IoStartNextPacket(DeviceObject , TRUE);
 
     return;
 }
@@ -744,4 +727,61 @@ BOOLEAN drvInterruptMessageService(IN struct _KINTERRUPT  *Interrupt, IN PVOID  
 	}
 
 	return TRUE;
+}
+
+VOID drvStartIO(IN PDEVICE_OBJECT DeviceObject , IN PIRP Irp)
+{
+	KIRQL oldIrql;
+	Pdrv_DEVICE_EXTENSION pDevExt;
+
+	IoAcquireCancelSpinLock(&oldIrql);
+
+	if(Irp != DeviceObject->CurrentIrp || Irp->Cancel)
+	{
+		IoReleaseCancelSpinLock(oldIrql);
+		return;
+	}
+
+	IoSetCancelRoutine(Irp , NULL);
+	IoReleaseCancelSpinLock(oldIrql);
+
+
+	pDevExt = (Pdrv_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+	pDevExt->Irp = Irp;
+
+	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_ADDR_BAR0) , RtlUlongByteSwap((ULONG)pDevExt->dmaPhysicalAddr.LowPart));
+	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_LEN_BAR0) , RtlUlongByteSwap(pDevExt->nBufferLen));
+	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_START_BAR0) , RtlUlongByteSwap(DMA_START_CMD));
+
+	//WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESET_BAR0) , RtlUlongByteSwap(0x01));
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	pDevExt->Irp = NULL;
+	IoStartNextPacket(DeviceObject , TRUE);
+
+	return;
+}
+
+VOID drvOnCancelIrp(IN PDEVICE_OBJECT DeviceObject , IN PIRP Irp)
+{
+	if(Irp == DeviceObject->CurrentIrp)
+	{
+		KIRQL oldIrql = Irp->CancelIrql;
+		IoReleaseCancelSpinLock(Irp->CancelIrql);
+		IoStartNextPacket(DeviceObject , TRUE);
+		KeLowerIrql(oldIrql);
+	}
+	else
+	{
+		KeRemoveEntryDeviceQueue(&DeviceObject->DeviceQueue , &Irp->Tail.Overlay.DeviceQueueEntry);
+		IoReleaseCancelSpinLock(Irp->CancelIrql);
+	}
+
+	Irp->IoStatus.Status = STATUS_CANCELLED;
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp , IO_NO_INCREMENT);
+
+	return;
 }
