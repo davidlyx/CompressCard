@@ -1,25 +1,27 @@
-﻿生成启动时间为 2014/12/17 23:31:25。
+﻿生成启动时间为 2014/12/21 1:11:13。
      1>项目“D:\文档\压缩卡\src\CompressCard\compress_card\test_app\test_app.vcxproj”在节点 2 上(build 个目标)。
      1>InitializeBuildStatus:
          正在创建“Debug\test_app.unsuccessfulbuild”，因为已指定“AlwaysCreate”。
        ClCompile:
          所有输出均为最新。
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\test_app.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt test_appDlg.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\test_app.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt test_app.cpp test_appDlg.cpp
          test_appDlg.cpp
-     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(434): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(438): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files (x86)\microsoft visual studio 10.0\vc\include\wchar.h(797) : 参见“swscanf”的声明
-     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(435): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(439): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files (x86)\microsoft visual studio 10.0\vc\include\wchar.h(797) : 参见“swscanf”的声明
-     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(479): warning C4244: “=”: 从“DWORD”转换到“BYTE”，可能丢失数据
-     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(529): warning C4244: “=”: 从“DWORD”转换到“BYTE”，可能丢失数据
-     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(579): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(482): warning C4244: “=”: 从“DWORD”转换到“BYTE”，可能丢失数据
+     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(532): warning C4244: “=”: 从“DWORD”转换到“BYTE”，可能丢失数据
+     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(583): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files (x86)\microsoft visual studio 10.0\vc\include\wchar.h(797) : 参见“swscanf”的声明
-     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(625): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(644): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files (x86)\microsoft visual studio 10.0\vc\include\wchar.h(797) : 参见“swscanf”的声明
-     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(626): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>d:\文档\压缩卡\src\compresscard\compress_card\test_app\test_appdlg.cpp(645): warning C4996: 'swscanf': This function or variable may be unsafe. Consider using swscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files (x86)\microsoft visual studio 10.0\vc\include\wchar.h(797) : 参见“swscanf”的声明
+         test_app.cpp
+         正在生成代码...
        ResourceCompile:
-         所有输出均为最新。
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _DEBUG /D _UNICODE /D UNICODE /l"0x0804" /IDebug\ /nologo /fo"Debug\test_app.res" test_app.rc 
        ManifestResourceCompile:
          所有输出均为最新。
        Link:
@@ -41,4 +43,4 @@
 
 生成成功。
 
-已用时间 00:00:05.25
+已用时间 00:00:12.30

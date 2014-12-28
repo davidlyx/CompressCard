@@ -36,11 +36,13 @@ typedef struct _deviceExtension
 
 	PVOID dmaBuffer;
 	ULONG nBufferLen;
-
-	ULONG nBytesMissed;
+	PHYSICAL_ADDRESS dmaPhysicalAddr;
 
 	ULONG nIntVersion;
 	IO_CONNECT_INTERRUPT_PARAMETERS params;
+
+	PDMA_ADAPTER pDmaAdapter;
+	ULONG NumberOfMapRegisters;
 } drv_DEVICE_EXTENSION, *Pdrv_DEVICE_EXTENSION;
 
 void drvUnload(IN PDRIVER_OBJECT DriverObject);
@@ -62,8 +64,8 @@ static const ULONG VERSION_BAR0 = 0x0000;
 static const ULONG RESET_BAR0 = 0x0004;
 static const ULONG WORK_MODE_BAR0 = 0x0008;
 static const ULONG GLOBAL_INT_MASK_BAR0 = 0x000C;
-static const ULONG INT_STATUS_BAR0 = 0x0010;
-static const ULONG INT_MASK_BAR0 = 0x0014;
+static const ULONG INT_MASK_BAR0 = 0x0010;
+static const ULONG INT_STATUS_BAR0 = 0x0014;
 static const ULONG RESOLUTION_BAR0 = 0x0018;
 static const ULONG DMA_ADDR_BAR0 = 0x0020;
 static const ULONG DMA_LEN_BAR0 = 0x0024;
@@ -80,6 +82,9 @@ static const ULONG WORK_MODE_PNG = 0x04;
 static const ULONG DMA_START_CMD = 0x01;
 
 static const ULONG QUANTIZATION_LEN = 1024;
+
+static const ULONG READ_BUFFER_SIZE = 2048;
+static const ULONG MAX_TRANSFER_SIZE = 32768;
 
 
 #define IOCTL_VERSION CTL_CODE(FILE_DEVICE_UNKNOWN , 0x800 , METHOD_BUFFERED , FILE_READ_ACCESS)
@@ -165,8 +170,9 @@ NTSTATUS drvAddDevice(IN PDRIVER_OBJECT  DriverObject, IN PDEVICE_OBJECT  Physic
 //	KeInitializeSpinLock(&pExtension->SpinIrp);
 //	KeInitializeEvent(&pExtension->ReadEvent, SynchronizationEvent, FALSE);
 	pExtension->dmaBuffer = NULL;
-	pExtension->nBufferLen = 0;
-	pExtension->nBytesMissed = 0;
+	pExtension->nBufferLen = READ_BUFFER_SIZE;
+	pExtension->dmaPhysicalAddr.QuadPart = 0;
+	pExtension->pDmaAdapter = NULL;
 
 	/*设置DPC*/
 	IoInitializeDpcRequest(pExtension->DeviceObject, drvDpcForIsr);
@@ -227,6 +233,7 @@ NTSTATUS drvPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	PIO_STACK_LOCATION irpSp = IoGetCurrentIrpStackLocation(Irp);
 	Pdrv_DEVICE_EXTENSION pExt = ((Pdrv_DEVICE_EXTENSION)DeviceObject->DeviceExtension);
 	NTSTATUS status;
+	IO_DISCONNECT_INTERRUPT_PARAMETERS params;
 
 	ASSERT(pExt);
 
@@ -257,9 +264,28 @@ NTSTATUS drvPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	case IRP_MN_REMOVE_DEVICE:
 		IoSetDeviceInterfaceState(&pExt->DeviceInterface, FALSE);
 		status = drvForwardIrpSynchronous(DeviceObject, Irp);
+
+		if(pExt->pDmaAdapter != NULL)
+		{
+			if(pExt->dmaBuffer != NULL)
+			{
+				pExt->pDmaAdapter->DmaOperations->FreeCommonBuffer(pExt->pDmaAdapter , pExt->nBufferLen , pExt->dmaPhysicalAddr , pExt->dmaBuffer , TRUE);
+				pExt->dmaBuffer = NULL;
+				pExt->nBufferLen = 0;
+			}
+
+			pExt->pDmaAdapter->DmaOperations->PutDmaAdapter(pExt->pDmaAdapter);
+			pExt->pDmaAdapter = NULL;
+		}
+
+		params.Version = pExt->nIntVersion;
+		params.ConnectionContext.InterruptObject = pExt->InterruptObject;
+		IoDisconnectInterruptEx(&params);
+
 		IoDetachDevice(pExt->TargetDeviceObject);
 		IoDeleteDevice(pExt->DeviceObject);
 		RtlFreeUnicodeString(&pExt->DeviceInterface);
+
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
 		return STATUS_SUCCESS;
@@ -288,33 +314,34 @@ NTSTATUS drvRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		Irp->IoStatus.Status = STATUS_DEVICE_BUSY;
 		Irp->IoStatus.Information = 0;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		return STATUS_SUCCESS;
+		return STATUS_DEVICE_BUSY;
 	}
 
 	stack = IoGetCurrentIrpStackLocation(Irp);
 
-	if(stack->Parameters.Read.Length >> 2 == 0)
+	if(stack->Parameters.Read.Length < READ_BUFFER_SIZE)
 	{
 		Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
 		Irp->IoStatus.Information = 0;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		return STATUS_SUCCESS;
+		return STATUS_BUFFER_OVERFLOW;
 	}
 
-	highestAddress.HighPart = 0;
-	highestAddress.LowPart = 0xffffffff;
-
 	pDevExt->Irp = Irp;
-	pDevExt->nBufferLen = (stack->Parameters.Read.Length >> 2) << 2;
-	pDevExt->dmaBuffer = MmAllocateContiguousMemory(pDevExt->nBufferLen , highestAddress);
 
-	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_ADDR_BAR0) , (ULONG)pDevExt->dmaBuffer);
-	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_LEN_BAR0) , pDevExt->nBufferLen);
-	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_START_BAR0) , DMA_START_CMD);
+	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_ADDR_BAR0) , RtlUlongByteSwap((ULONG)pDevExt->dmaPhysicalAddr.LowPart));
+	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_LEN_BAR0) , RtlUlongByteSwap(pDevExt->nBufferLen));
+	WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + DMA_START_BAR0) , RtlUlongByteSwap(DMA_START_CMD));
 
-	IoMarkIrpPending(Irp);
+	//IoMarkIrpPending(Irp);
 
-	return STATUS_PENDING;
+	//return STATUS_PENDING;
+	//WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESET_BAR0) , RtlUlongByteSwap(0x01));
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	pDevExt->Irp = NULL;
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATION pIrpStack)
@@ -327,6 +354,7 @@ NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATIO
 	ULONG NumCount;
 	NTSTATUS status = STATUS_SUCCESS;
     IO_CONNECT_INTERRUPT_PARAMETERS paramsMsi , paramsFs;
+	DEVICE_DESCRIPTION dmaParam;
 
 	/*获取设备已经分配的资源*/	
 	pResourceListTranslated = pIrpStack->Parameters.StartDevice.AllocatedResourcesTranslated;
@@ -423,6 +451,7 @@ NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATIO
 		//}
 
 		//if (paramsMsi.Version == CONNECT_FULLY_SPECIFIED)
+		//break;
 		{
 			status = IoConnectInterruptEx(&paramsFs);
 			if (NT_SUCCESS(status))
@@ -435,6 +464,27 @@ NTSTATUS drvReadPciConfig(IN Pdrv_DEVICE_EXTENSION pDevExt, IN PIO_STACK_LOCATIO
 
 		return status;
 	}while(0);
+
+	RtlZeroMemory(&dmaParam , sizeof(dmaParam));
+	dmaParam.Version = DEVICE_DESCRIPTION_VERSION1;
+	dmaParam.Master = TRUE;
+	dmaParam.ScatterGather = FALSE;
+	dmaParam.Dma32BitAddresses = TRUE;
+	dmaParam.IgnoreCount = FALSE;
+	dmaParam.InterfaceType = PCIBus;
+	dmaParam.MaximumLength = MAX_TRANSFER_SIZE;
+
+	pDevExt->pDmaAdapter = IoGetDmaAdapter(pDevExt->PhysicalDeviceObject , &dmaParam , &(pDevExt->NumberOfMapRegisters));
+	if(pDevExt->pDmaAdapter == NULL)
+	{
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+	pDevExt->dmaBuffer = pDevExt->pDmaAdapter->DmaOperations->AllocateCommonBuffer(pDevExt->pDmaAdapter , READ_BUFFER_SIZE , &(pDevExt->dmaPhysicalAddr) , TRUE);
+	if(pDevExt->dmaBuffer == NULL)
+	{
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
 
 	return (STATUS_SUCCESS);
 }
@@ -455,14 +505,11 @@ VOID drvDpcForIsr(IN PKDPC Dpc, IN struct _DEVICE_OBJECT *DeviceObject, OPTIONAL
 
 	systemBuffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress , NormalPagePriority);
 	RtlCopyMemory(systemBuffer , pDevExt->dmaBuffer , pDevExt->nBufferLen);
-	MmFreeContiguousMemory(pDevExt->dmaBuffer);
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = pDevExt->nBufferLen;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-	pDevExt->dmaBuffer = NULL;
-	pDevExt->nBufferLen = 0;
 	pDevExt->Irp = NULL;
 
     return;
@@ -471,12 +518,16 @@ VOID drvDpcForIsr(IN PKDPC Dpc, IN struct _DEVICE_OBJECT *DeviceObject, OPTIONAL
 BOOLEAN drvInterruptService(IN struct _KINTERRUPT  *Interrupt, IN PVOID  ServiceContext)
 {
 	Pdrv_DEVICE_EXTENSION pDevExt;
-
-	//清中断？
-
-	return FALSE;
+	ULONG status;
 
 	pDevExt = (Pdrv_DEVICE_EXTENSION)ServiceContext;
+
+	//清中断？
+	status = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + INT_STATUS_BAR0));
+	if(RtlUlongByteSwap(status) == 0)
+	{
+		return FALSE;
+	}
 
 	if(pDevExt->Irp != NULL)
 	{
@@ -511,23 +562,24 @@ NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 			break;
 		}
 
-		*((PULONG)buffer) = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + VERSION_BAR0));
+		*((PULONG)buffer) = RtlUlongByteSwap(READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + VERSION_BAR0)));
 		Irp->IoStatus.Information = sizeof(ULONG);
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 
 		break;
 	case IOCTL_RESET:
-		WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESET_BAR0) , RESET_CMD);
+		WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESET_BAR0) , RtlUlongByteSwap(RESET_CMD));
 		Irp->IoStatus.Information = 0;
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 
 		break;
 	case IOCTL_SET_MODE:
 		ulReadBuffer = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + WORK_MODE_BAR0));
+		ulReadBuffer = RtlUlongByteSwap(ulReadBuffer);
 
 		if(nBytesIn == sizeof(ULONG))
 		{
-			WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + WORK_MODE_BAR0) , *((PULONG)buffer));
+			WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + WORK_MODE_BAR0) , RtlUlongByteSwap(*((PULONG)buffer)));
 		}
 		
 		if(nBytesOut == sizeof(ULONG))
@@ -549,10 +601,11 @@ NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		break;
 	case IOCTL_SET_RESOLUTION:
 		ulReadBuffer = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESOLUTION_BAR0));
+		ulReadBuffer = RtlUlongByteSwap(ulReadBuffer);
 
 		if(nBytesIn == sizeof(ULONG))
 		{
-			WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESOLUTION_BAR0) , *((PULONG)buffer));
+			WRITE_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + RESOLUTION_BAR0) , RtlUlongByteSwap(*((PULONG)buffer)));
 		}
 		
 		if(nBytesOut == sizeof(ULONG))
@@ -633,10 +686,18 @@ NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 			*((PULONG)buffer) = ulReadBuffer;
 			Irp->IoStatus.Information = sizeof(ULONG);
 		}
-		else if(nBytesIn == 0 && nBytesOut > sizeof(pDevExt->params.FullySpecified))
+		else if(nBytesIn == 0 && nBytesOut == pDevExt->nBufferLen)
 		{
-			RtlCopyMemory(buffer , &(pDevExt->params.FullySpecified) , sizeof(pDevExt->params.FullySpecified));
-			Irp->IoStatus.Information = sizeof(pDevExt->params.FullySpecified);
+			RtlCopyMemory(buffer , pDevExt->dmaBuffer , pDevExt->nBufferLen);
+			Irp->IoStatus.Information = nBytesOut;
+		}
+		else if(nBytesIn == 0 && nBytesOut == sizeof(pDevExt->nBufferLen) + sizeof(pDevExt->dmaPhysicalAddr.LowPart) + sizeof(pDevExt->dmaPhysicalAddr.HighPart) + sizeof(pDevExt->dmaBuffer))
+		{
+			RtlCopyMemory(buffer , &(pDevExt->dmaPhysicalAddr.LowPart) , sizeof(pDevExt->dmaPhysicalAddr.LowPart));
+			RtlCopyMemory((PCHAR)buffer + sizeof(pDevExt->dmaPhysicalAddr.LowPart) , &(pDevExt->dmaPhysicalAddr.HighPart) , sizeof(pDevExt->dmaPhysicalAddr.HighPart));
+			RtlCopyMemory((PCHAR)buffer + sizeof(pDevExt->dmaPhysicalAddr.LowPart) + sizeof(pDevExt->dmaPhysicalAddr.HighPart) , &(pDevExt->dmaBuffer) , sizeof(pDevExt->dmaBuffer));
+			RtlCopyMemory((PCHAR)buffer + sizeof(pDevExt->dmaPhysicalAddr.LowPart) + sizeof(pDevExt->dmaPhysicalAddr.HighPart) + sizeof(pDevExt->dmaBuffer) , &(pDevExt->nBufferLen) , sizeof(pDevExt->nBufferLen));
+			Irp->IoStatus.Information = nBytesOut;
 		}
 		else
 		{
@@ -666,11 +727,16 @@ NTSTATUS drvIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 BOOLEAN drvInterruptMessageService(IN struct _KINTERRUPT  *Interrupt, IN PVOID  ServiceContext, IN ULONG  MessageId)
 {
 	Pdrv_DEVICE_EXTENSION pDevExt;
-
-	//清中断？
-	return FALSE;
+	ULONG status;
 
 	pDevExt = (Pdrv_DEVICE_EXTENSION)ServiceContext;
+
+	//清中断？
+	status = READ_REGISTER_ULONG((PULONG)((PUCHAR)pDevExt->MemBar0 + INT_STATUS_BAR0));
+	if(RtlUlongByteSwap(status) == 0)
+	{
+		return FALSE;
+	}
 
 	if(pDevExt->Irp != NULL)
 	{

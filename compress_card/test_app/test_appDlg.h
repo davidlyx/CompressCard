@@ -95,4 +95,6 @@ public:
 	CString m_csWriteData;
 	afx_msg void OnBnClickedButtonReadAddr();
 	afx_msg void OnBnClickedButtonWriteAddr();
+	CButton m_cbReadData;
+	afx_msg void OnBnClickedButtonReadData();
 };

@@ -1,10 +1,10 @@
-﻿生成启动时间为 2014/12/19 19:22:13。
+﻿生成启动时间为 2014/12/28 15:42:22。
      1>项目“D:\文档\压缩卡\src\CompressCard\compress_card\drv\drv.vcxproj”在节点 2 上(build 个目标)。
      1>Build:
          call C:\WinDDK\7600.16385.1\\bin\setenv.bat C:\WinDDK\7600.16385.1\ chk x64 win7
          cd /d D:\文档\压缩卡\src\CompressCard\compress_card\drv\
          build
-         Launching OACR monitor
+         OACR monitor running already
          path contains nonexistant c:\program files (x86)\microsoft visual studio 10.0\common7\tools\bin, removing
          path contains nonexistant c:\program files (x86)\microsoft sdks\windows\v7.0a\\lib\win64, removing
          BUILD: Compile and Link for AMD64
@@ -15,7 +15,7 @@
          
          BUILD: Computing Include file dependencies:
          
-         BUILD: Start time: Fri Dec 19 19:22:17 2014
+         BUILD: Start time: Sun Dec 28 15:42:25 2014
          BUILD: Examining d:\文档\压缩卡\src\compresscard\compress_card\drv directory for files to compile.
          
              d:\文档\压缩卡\src\compresscard\compress_card\drv 
@@ -28,7 +28,7 @@
          Configuring OACR for 'root:amd64chk' - <OACR on>
          Compiling - drv.cpp
          Linking Executable - objchk_win7_amd64\amd64\drv.sys
-         BUILD: Finish time: Fri Dec 19 19:22:20 2014
+         BUILD: Finish time: Sun Dec 28 15:42:27 2014
          BUILD: Done
          
          
@@ -41,4 +41,4 @@
 
 生成成功。
 
-已用时间 00:00:06.94
+已用时间 00:00:05.74

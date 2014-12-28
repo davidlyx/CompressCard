@@ -97,6 +97,7 @@ void Ctest_appDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_WRITE_ADDR, m_csWriteAddr);
 	DDX_Text(pDX, IDC_EDIT_READ_DATA, m_csReadData);
 	DDX_Text(pDX, IDC_EDIT_WRITE_DATA, m_csWriteData);
+	DDX_Control(pDX, IDC_BUTTON_READ_DATA, m_cbReadData);
 }
 
 BEGIN_MESSAGE_MAP(Ctest_appDlg, CDialogEx)
@@ -116,6 +117,7 @@ BEGIN_MESSAGE_MAP(Ctest_appDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_READ_QUANT2, &Ctest_appDlg::OnBnClickedButtonReadQuant2)
 	ON_BN_CLICKED(IDC_BUTTON_READ_ADDR, &Ctest_appDlg::OnBnClickedButtonReadAddr)
 	ON_BN_CLICKED(IDC_BUTTON_WRITE_ADDR, &Ctest_appDlg::OnBnClickedButtonWriteAddr)
+	ON_BN_CLICKED(IDC_BUTTON_READ_DATA, &Ctest_appDlg::OnBnClickedButtonReadData)
 END_MESSAGE_MAP()
 
 
@@ -163,6 +165,7 @@ BOOL Ctest_appDlg::OnInitDialog()
 	m_cbSetQuant2.EnableWindow(FALSE);
 	m_cbReadAddr.EnableWindow(FALSE);
 	m_cbWriteAddr.EnableWindow(FALSE);
+	m_cbReadData.EnableWindow(FALSE);
 
 	m_cbMode.InsertString(0 , _T("JPEG 90%"));
 	m_cbMode.InsertString(1 , _T("JPEG 80%"));
@@ -250,6 +253,7 @@ void Ctest_appDlg::OnBnClickedButtonOpen()
 		m_cbSetQuant2.EnableWindow(FALSE);
 		m_cbReadAddr.EnableWindow(FALSE);
 		m_cbWriteAddr.EnableWindow(FALSE);
+		m_cbReadData.EnableWindow(FALSE);
 		return;
 	}
 
@@ -316,6 +320,7 @@ void Ctest_appDlg::OnBnClickedButtonOpen()
 		m_cbSetQuant2.EnableWindow(TRUE);
 		m_cbReadAddr.EnableWindow(TRUE);
 		m_cbWriteAddr.EnableWindow(TRUE);
+		m_cbReadData.EnableWindow(TRUE);
 	}
 	else
 	{
@@ -341,7 +346,7 @@ void Ctest_appDlg::OnBnClickedButtonReadVersion()
 		return;
 	}
 
-	m_csVersion.Format(_T("%08X") , ntohl(nVersion));
+	m_csVersion.Format(_T("%08X") , nVersion);
 	UpdateData(FALSE);
 
 	return;
@@ -370,7 +375,7 @@ void Ctest_appDlg::OnBnClickedButtonSetMode()
 	DWORD nRead;
 
 	UpdateData(TRUE);
-	mode = htonl(m_cbMode.GetCurSel());
+	mode = m_cbMode.GetCurSel();
 
 	if(DeviceIoControl(hHandle , IOCTL_SET_MODE , &mode , sizeof(mode) , NULL , 0 , &nRead , NULL) != TRUE)
 	{
@@ -394,7 +399,6 @@ void Ctest_appDlg::OnBnClickedButtonReadMode()
 		return;
 	}
 
-	mode = ntohl(mode);
 	switch(mode)
 	{
 	case WORK_MODE_JPEG_90:
@@ -433,7 +437,7 @@ void Ctest_appDlg::OnBnClickedButtonSetRes()
 
 	swscanf(m_csResHor , _T("%d") , &hor);
 	swscanf(m_csResVer , _T("%d") , &ver);
-	res = htonl((hor << 16) + ver);
+	res = (hor << 16) + ver;
 
 	if(DeviceIoControl(hHandle , IOCTL_SET_RESOLUTION , &res , sizeof(res) , NULL , 0 , &nRead , NULL) != TRUE)
 	{
@@ -457,7 +461,6 @@ void Ctest_appDlg::OnBnClickedButtonReadRes()
 		return;
 	}
 
-	res = ntohl(res);
 	m_csResHorCur.Format(_T("%d") , res >> 16);
 	m_csResVerCur.Format(_T("%d") , res & 0xffff);
 
@@ -574,6 +577,7 @@ void Ctest_appDlg::OnBnClickedButtonReadAddr()
 	DWORD nOffset , dwData;
 	BYTE buffer[1024];
 	DWORD i;
+	DWORD dmaInfo[5];
 
 	UpdateData(TRUE);
 	swscanf(m_csReadAddr , _T("%x") , &nOffset);
@@ -586,6 +590,7 @@ void Ctest_appDlg::OnBnClickedButtonReadAddr()
 			return;
 		}
 
+		m_csQuant.Empty();
 		for(i = 0 ; i < nRead ; i++)
 		{
 			if(i > 0 && ((i % 32) == 0))
@@ -593,6 +598,20 @@ void Ctest_appDlg::OnBnClickedButtonReadAddr()
 				m_csQuant.AppendFormat(_T("\r\n"));
 			}
 			m_csQuant.AppendFormat(_T("%02X") , buffer[i]);
+		}
+	}
+	else if(nOffset == 0x87654321)
+	{
+		if(DeviceIoControl(hHandle , IOCTL_READ_ADDR , NULL , 0 , dmaInfo , sizeof(dmaInfo) , &nRead , NULL) != TRUE)
+		{
+			MessageBox(_T("DeviceIoControl error"));
+			return;
+		}
+
+		m_csQuant.Empty();
+		for(i = 0 ; i < sizeof(dmaInfo) / sizeof(dmaInfo[0]) ; i++)
+		{
+			m_csQuant.AppendFormat(_T("%08X") , dmaInfo[i]);
 		}
 	}
 	else
@@ -624,8 +643,9 @@ void Ctest_appDlg::OnBnClickedButtonWriteAddr()
 	UpdateData(TRUE);
 	swscanf(m_csWriteAddr , _T("%x") , buffer);
 	swscanf(m_csWriteData , _T("%x") , buffer + 1);
+	buffer[1] = htonl(buffer[1]);
 
-	if(DeviceIoControl(hHandle , IOCTL_READ_ADDR , buffer , sizeof(buffer) , NULL , 0 , &nRead , NULL) != TRUE)
+	if(DeviceIoControl(hHandle , IOCTL_WRITE_ADDR , buffer , sizeof(buffer) , NULL , 0 , &nRead , NULL) != TRUE)
 	{
 		MessageBox(_T("DeviceIoControl error"));
 		return;
@@ -633,6 +653,30 @@ void Ctest_appDlg::OnBnClickedButtonWriteAddr()
 
 	m_csWriteAddr.Format(_T("%08X") , buffer[0]);
 	m_csWriteData.Format(_T("%08X") , buffer[1]);
+
+	UpdateData(FALSE);
+
+	return;
+}
+
+
+void Ctest_appDlg::OnBnClickedButtonReadData()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	BYTE buffer[2048];
+	DWORD nRead , i;
+
+	if(ReadFile(hHandle , buffer , sizeof(buffer) , &nRead , NULL) != TRUE)
+	{
+		MessageBox(_T("ReadFile error"));
+		return;
+	}
+
+	m_csQuant.Empty();
+	for(i = 0 ; i < nRead ; i++)
+	{
+		m_csQuant.AppendFormat(_T("%08X") , buffer[i]);
+	}
 
 	UpdateData(FALSE);
 
