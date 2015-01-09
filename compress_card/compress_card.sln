@@ -4,6 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "drv", "drv\drv.vcxproj", "{1D05F080-9D2D-439B-B1DF-1F2E8EA00990}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_app", "test_app\test_app.vcxproj", "{4FAF8A20-EC39-4BEF-B0E2-32B5CB8ED970}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2DC6B8CD-23B8-42D0-92E5-D78CD31DE8CC} = {2DC6B8CD-23B8-42D0-92E5-D78CD31DE8CC}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cc_dll", "cc_dll\cc_dll.vcxproj", "{2DC6B8CD-23B8-42D0-92E5-D78CD31DE8CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +32,12 @@ Global
 		{4FAF8A20-EC39-4BEF-B0E2-32B5CB8ED970}.Release|Win32.ActiveCfg = Release|Win32
 		{4FAF8A20-EC39-4BEF-B0E2-32B5CB8ED970}.Release|Win32.Build.0 = Release|Win32
 		{4FAF8A20-EC39-4BEF-B0E2-32B5CB8ED970}.Release|x64.ActiveCfg = Release|Win32
+		{2DC6B8CD-23B8-42D0-92E5-D78CD31DE8CC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2DC6B8CD-23B8-42D0-92E5-D78CD31DE8CC}.Debug|Win32.Build.0 = Debug|Win32
+		{2DC6B8CD-23B8-42D0-92E5-D78CD31DE8CC}.Debug|x64.ActiveCfg = Debug|Win32
+		{2DC6B8CD-23B8-42D0-92E5-D78CD31DE8CC}.Release|Win32.ActiveCfg = Release|Win32
+		{2DC6B8CD-23B8-42D0-92E5-D78CD31DE8CC}.Release|Win32.Build.0 = Release|Win32
+		{2DC6B8CD-23B8-42D0-92E5-D78CD31DE8CC}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

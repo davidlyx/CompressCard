@@ -6,7 +6,7 @@
 #include "test_app.h"
 #include "test_appDlg.h"
 #include "afxdialogex.h"
-#include <Setupapi.h>
+#include "cc_dll.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -230,15 +230,10 @@ HCURSOR Ctest_appDlg::OnQueryDragIcon()
 void Ctest_appDlg::OnBnClickedButtonOpen()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	GUID devGuid={0xAC1F07, 0x61bb, 0x4a65, {0x9c, 0x83, 0x68, 0x98, 0xb3, 0x80, 0x2d, 0xd0 } };
-	HDEVINFO hDevInfo;
-	SP_INTERFACE_DEVICE_DATA IfDevData;
-	SP_INTERFACE_DEVICE_DETAIL_DATA *IfDevDetail = NULL;
-	DWORD ReqLen;
 
 	if(hHandle != INVALID_HANDLE_VALUE)
 	{
-		CloseHandle(hHandle);
+		ccClose(hHandle);
 		hHandle = INVALID_HANDLE_VALUE;
 		cbtOpen.SetWindowTextW(_T("打开设备"));
 		m_cbReadVersion.EnableWindow(FALSE);
@@ -257,53 +252,8 @@ void Ctest_appDlg::OnBnClickedButtonOpen()
 		return;
 	}
 
-	// HDEVINFO as all source device is generated
-	hDevInfo = SetupDiGetClassDevs(&devGuid,
-		0, // Enumerator
-		0, // 
-		DIGCF_PRESENT | DIGCF_INTERFACEDEVICE );
-
-	if (hDevInfo == INVALID_HANDLE_VALUE)
-	{
-		// Error processing
-		MessageBox(_T("SetupDiGetClassDevs error"));
-		return;
-	}
-
-	// All device is enumerated
-	IfDevData.cbSize = sizeof(SP_INTERFACE_DEVICE_DATA);
-
-	if(!SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &devGuid, 0, &IfDevData))
-	{
-		SetupDiDestroyDeviceInfoList(hDevInfo);
-		MessageBox(_T("SetupDiEnumDeviceInterfaces error"));
-		return;
-	}
-
-	// A necessary amount of the memory in the buffer is obtained
-	SetupDiGetDeviceInterfaceDetail(hDevInfo ,&IfDevData, NULL, 0, &ReqLen, NULL);
-	// Memory allocation to acquire detailed information
-	IfDevDetail = (SP_INTERFACE_DEVICE_DETAIL_DATA *)(new char[ReqLen]);
-	IfDevDetail->cbSize=sizeof(SP_INTERFACE_DEVICE_DETAIL_DATA);
-
-	// Detailed information (pass) is actually acquired
-	if(!SetupDiGetDeviceInterfaceDetail(hDevInfo,&IfDevData, IfDevDetail, ReqLen, NULL, NULL))
-	{
-		SetupDiDestroyDeviceInfoList(hDevInfo);
-		MessageBox(_T("SetupDiGetDeviceInterfaceDetail error"));
-		return;
-	}
-
-	hHandle=CreateFile(IfDevDetail->DevicePath, GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 
-		NULL);
-
-	// Opening of allocated memory
-	delete IfDevDetail;
-
-	//  Cleanup
-	SetupDiDestroyDeviceInfoList(hDevInfo);
+	
+	hHandle = ccOpen();
 
 	if(hHandle != INVALID_HANDLE_VALUE)
 	{
@@ -338,13 +288,8 @@ void Ctest_appDlg::OnBnClickedButtonReadVersion()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	ULONG nVersion;
-	DWORD nRead;
-
-	if(DeviceIoControl(hHandle , IOCTL_VERSION , NULL , 0 , &nVersion , sizeof(nVersion) , &nRead , NULL) != TRUE)
-	{
-		MessageBox(_T("DeviceIoControl error"));
-		return;
-	}
+	
+	nVersion = ccReadVersion(hHandle);
 
 	m_csVersion.Format(_T("%08X") , nVersion);
 	UpdateData(FALSE);
@@ -356,13 +301,7 @@ void Ctest_appDlg::OnBnClickedButtonReadVersion()
 void Ctest_appDlg::OnBnClickedButtonReset()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	DWORD nRead;
-
-	if(DeviceIoControl(hHandle , IOCTL_RESET , NULL , 0 , NULL , 0 , &nRead , NULL) != TRUE)
-	{
-		MessageBox(_T("DeviceIoControl error"));
-		return;
-	}
+	ccReset(hHandle);
 
 	return;
 }
@@ -372,16 +311,11 @@ void Ctest_appDlg::OnBnClickedButtonSetMode()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	DWORD mode;
-	DWORD nRead;
 
 	UpdateData(TRUE);
 	mode = m_cbMode.GetCurSel();
 
-	if(DeviceIoControl(hHandle , IOCTL_SET_MODE , &mode , sizeof(mode) , NULL , 0 , &nRead , NULL) != TRUE)
-	{
-		MessageBox(_T("DeviceIoControl error"));
-		return;
-	}
+	ccSetMode(hHandle , mode);
 
 	return;
 }
@@ -391,13 +325,8 @@ void Ctest_appDlg::OnBnClickedButtonReadMode()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	DWORD mode;
-	DWORD nRead;
-
-	if(DeviceIoControl(hHandle , IOCTL_SET_MODE , NULL , 0 , &mode , sizeof(mode) , &nRead , NULL) != TRUE)
-	{
-		MessageBox(_T("DeviceIoControl error"));
-		return;
-	}
+	
+	mode = ccReadMode(hHandle);
 
 	switch(mode)
 	{
@@ -430,20 +359,14 @@ void Ctest_appDlg::OnBnClickedButtonReadMode()
 void Ctest_appDlg::OnBnClickedButtonSetRes()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	DWORD res , hor , ver;
-	DWORD nRead;
+	DWORD hor , ver;
 
 	UpdateData(TRUE);
 
 	swscanf(m_csResHor , _T("%d") , &hor);
 	swscanf(m_csResVer , _T("%d") , &ver);
-	res = (hor << 16) + ver;
-
-	if(DeviceIoControl(hHandle , IOCTL_SET_RESOLUTION , &res , sizeof(res) , NULL , 0 , &nRead , NULL) != TRUE)
-	{
-		MessageBox(_T("DeviceIoControl error"));
-		return;
-	}
+	
+	ccSetResolution(hHandle , hor , ver);
 
 	return;
 }
@@ -452,17 +375,12 @@ void Ctest_appDlg::OnBnClickedButtonSetRes()
 void Ctest_appDlg::OnBnClickedButtonReadRes()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	DWORD res;
-	DWORD nRead;
+	DWORD hor , ver;
+	
+	ccSetResolution(hHandle , &hor , &ver);
 
-	if(DeviceIoControl(hHandle , IOCTL_SET_RESOLUTION , NULL , 0 , &res , sizeof(res) , &nRead , NULL) != TRUE)
-	{
-		MessageBox(_T("DeviceIoControl error"));
-		return;
-	}
-
-	m_csResHorCur.Format(_T("%d") , res >> 16);
-	m_csResVerCur.Format(_T("%d") , res & 0xffff);
+	m_csResHorCur.Format(_T("%d") , hor);
+	m_csResVerCur.Format(_T("%d") , ver);
 
 	UpdateData(FALSE);
 
@@ -652,7 +570,7 @@ void Ctest_appDlg::OnBnClickedButtonWriteAddr()
 	}
 
 	m_csWriteAddr.Format(_T("%08X") , buffer[0]);
-	m_csWriteData.Format(_T("%08X") , buffer[1]);
+	m_csWriteData.Format(_T("%08X") , ntohl(buffer[1]));
 
 	UpdateData(FALSE);
 
@@ -664,7 +582,7 @@ void Ctest_appDlg::OnBnClickedButtonReadData()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	BYTE buffer[2048];
-	DWORD nRead , i;
+	DWORD nRead , i , *pAcc;
 
 	if(ReadFile(hHandle , buffer , sizeof(buffer) , &nRead , NULL) != TRUE)
 	{
@@ -673,9 +591,32 @@ void Ctest_appDlg::OnBnClickedButtonReadData()
 	}
 
 	m_csQuant.Empty();
+
+	pAcc = (DWORD*)buffer;
+	for(i = 1 ; i < nRead / sizeof(DWORD) ; i++)
+	{
+		if(ntohl(pAcc[0]) + 1 != ntohl(pAcc[1]))
+		{
+			break;
+		}
+		pAcc++;
+	}
+	if(i == nRead / sizeof(DWORD))
+	{
+		m_csQuant.AppendFormat(_T("increase\r\n"));
+	}
+	else
+	{
+		m_csQuant.AppendFormat(_T("not inc\r\n"));
+	}
+
 	for(i = 0 ; i < nRead ; i++)
 	{
-		m_csQuant.AppendFormat(_T("%08X") , buffer[i]);
+		if(i > 0 && ((i % 32) == 0))
+		{
+			m_csQuant.AppendFormat(_T("\r\n"));
+		}
+		m_csQuant.AppendFormat(_T("%02X") , buffer[i]);
 	}
 
 	UpdateData(FALSE);
